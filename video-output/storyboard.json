@@ -1,0 +1,67 @@
+{
+  "scenes": [
+    {
+      "id": 1,
+      "duration": 15,
+      "type": "dashboard",
+      "url": "https://demo-mu-nine-17.vercel.app",
+      "actions": ["show_stats", "animate_numbers"],
+      "voiceover": "intro"
+    },
+    {
+      "id": 2,
+      "duration": 15,
+      "type": "problem",
+      "visual": "notifications_spam",
+      "voiceover": "problem"
+    },
+    {
+      "id": 3,
+      "duration": 20,
+      "type": "solution",
+      "visual": "logo_reveal",
+      "voiceover": "solution"
+    },
+    {
+      "id": 4,
+      "duration": 25,
+      "type": "demo_chat",
+      "url": "https://demo-mu-nine-17.vercel.app",
+      "actions": ["click_simulate", "show_typing", "show_response"],
+      "voiceover": "demo1"
+    },
+    {
+      "id": 5,
+      "duration": 20,
+      "type": "demo_pricing",
+      "url": "https://demo-mu-nine-17.vercel.app",
+      "actions": ["click_optimize", "highlight_calendar", "show_price_changes"],
+      "voiceover": "demo2"
+    },
+    {
+      "id": 6,
+      "duration": 15,
+      "type": "demo_reviews",
+      "visual": "stars_animation",
+      "voiceover": "demo3"
+    },
+    {
+      "id": 7,
+      "duration": 15,
+      "type": "results",
+      "visual": "final_stats",
+      "voiceover": "results"
+    },
+    {
+      "id": 8,
+      "duration": 15,
+      "type": "cta",
+      "url": "https://landing-page-zeta-five-41.vercel.app",
+      "actions": ["scroll_to_pricing", "highlight_button"],
+      "voiceover": "cta"
+    }
+  ],
+  "total_duration": 140,
+  "format": "16:9",
+  "resolution": "1920x1080"
+}

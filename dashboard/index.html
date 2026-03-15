@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Airbnb AI Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f0f1a;
+            --darker: #08080f;
+            --card: #16162a;
+            --border: #2a2a4a;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--darker);
+            color: var(--text);
+        }
+        
+        /* Layout */
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--dark);
+            border-right: 1px solid var(--border);
+            padding: 24px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-section {
+            margin-bottom: 32px;
+        }
+        
+        .nav-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--text);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(236, 72, 153, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 24px 32px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .stat-title {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .stat-icon.blue { background: rgba(99, 102, 241, 0.2); }
+        .stat-icon.green { background: rgba(16, 185, 129, 0.2); }
+        .stat-icon.orange { background: rgba(245, 158, 11, 0.2); }
+        .stat-icon.pink { background: rgba(236, 72, 153, 0.2); }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        
+        .stat-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+        
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        .card-action {
+            font-size: 13px;
+            color: var(--primary);
+            cursor: pointer;
+        }
+        
+        /* Messages List */
+        .message-item {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: var(--darker);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .message-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        
+        .message-content {
+            flex: 1;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .message-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .message-preview {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .message-badge {
+            background: var(--primary);
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        /* Activity List */
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            background: rgba(99, 102, 241, 0.2);
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-text {
+            font-size: 13px;
+        }
+        
+        .activity-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">🏠 Airbnb AI</div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Principal</div>
+                <a class="nav-item active" onclick="showSection('dashboard')">
+                    <span>📊</span> Dashboard
+                </a>
+                <a class="nav-item" onclick="showSection('messages')">
+                    <span>💬</span> Messages
+                    <span class="message-badge" style="margin-left: auto;">3</span>
+                </a>
+                <a class="nav-item" onclick="showSection('calendar')">
+                    <span>📅</span> Calendrier
+                </a>
+                <a class="nav-item" onclick="showSection('pricing')">
+                    <span>💰</span> Pricing
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Gestion</div>
+                <a class="nav-item" onclick="showSection('bookings')">
+                    <span>📋</span> Réservations
+                </a>
+                <a class="nav-item" onclick="showSection('reviews')">
+                    <span>⭐</span> Avis
+                </a>
+                <a class="nav-item" onclick="showSection('analytics')">
+                    <span>📈</span> Analytics
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Paramètres</div>
+                <a class="nav-item" onclick="showSection('settings')">
+                    <span>⚙️</span> Configuration
+                </a>
+                <a class="nav-item" onclick="showSection('profile')">
+                    <span>👤</span> Profil
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Header -->
+            <div class="header">
+                <h1>Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">🔄 Synchroniser</button>
+                    <button class="btn btn-primary">+ Nouveau message</button>
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Revenus ce mois</span>
+                        <div class="stat-icon blue">💰</div>
+                    </div>
+                    <div class="stat-value">€12,450</div>
+                    <div class="stat-change positive">↑ +23% vs mois dernier</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Taux d'occupation</span>
+                        <div class="stat-icon green">📊</div>
+                    </div>
+                    <div class="stat-value">87%</div>
+                    <div class="stat-change positive">↑ +5% vs mois dernier</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Messages en attente</span>
+                        <div class="stat-icon orange">💬</div>
+                    </div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-change">Réponse auto activée</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Note moyenne</span>
+                        <div class="stat-icon pink">⭐</div>
+                    </div>
+                    <div class="stat-value">4.9</div>
+                    <div class="stat-change positive">↑ +0.2 ce mois</div>
+                </div>
+            </div>
+            
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Messages -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Messages récents</span>
+                        <span class="card-action">Voir tout →</span>
+                    </div>
+                    
+                    <div class="message-item">
+                        <div class="message-avatar">👤</div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="message-name">Marie Dupont</span>
+                                <span class="message-time">2 min</span>
+                            </div>
+                            <div class="message-preview">Bonjour, est-ce que le logement est disponible pour le week-end du 15 août ?</div>
+                        </div>
+                        <span class="message-badge">Nouveau</span>
+                    </div>
+                    
+                    <div class="message-item">
+                        <div class="message-avatar">👤</div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="message-name">Thomas Martin</span>
+                                <span class="message-time">15 min</span>
+                            </div>
+                            <div class="message-preview">Merci pour votre réponse rapide ! Je confirme la réservation.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="message-item">
+                        <div class="message-avatar">👤</div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="message-name">Sophie Bernard</span>
+                                <span class="message-time">1h</span>
+                            </div>
+                            <div class="message-preview">L'agent IA a répondu automatiquement ✓</div>
+                        </div>
+                    </div>
+                    
+                    <div class="message-item">
+                        <div class="message-avatar">👤</div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="message-name">Lucas Petit</span>
+                                <span class="message-time">3h</span>
+                            </div>
+                            <div class="message-preview">Parfait, merci pour les informations !</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Activité récente</span>
+                        <span class="card-action">Historique →</span>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">🤖</div>
+                        <div class="activity-content">
+                            <div class="activity-text">IA a répondu à Marie D.</div>
+                            <div class="activity-time">Il y a 2 minutes</div>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">💰</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Prix ajusté +15% (week-end)</div>
+                            <div class="activity-time">Il y a 1 heure</div>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">📅</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Nouvelle réservation confirmée</div>
+                            <div class="activity-time">Il y a 3 heures</div>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">⭐</div>
+                        <div class="activity-content">
+                            <div class="activity-text">Nouvel avis 5 étoiles reçu</div>
+                            <div class="activity-time">Il y a 5 heures</div>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">🤖</div>
+                        <div class="activity-content">
+                            <div class="activity-text">IA a demandé un avis au client</div>
+                            <div class="activity-time">Il y a 6 heures</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        function showSection(section) {
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.nav-item').classList.add('active');
+            
+            // Here you would typically load different content
+            console.log('Loading section:', section);
+        }
+    </script>
+</body>
+</html>

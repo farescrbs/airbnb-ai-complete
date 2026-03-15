@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airbnb AI Manager - Gérez vos locations en 5 minutes</title>
+    <meta name="description" content="L'IA qui gère vos locations Airbnb automatiquement. Réponses instantanées, pricing dynamique, gestion des avis. Économisez 15h par semaine.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        :root {
+            --bg: #0a0a0f;
+            --bg-secondary: #111118;
+            --card: #161620;
+            --border: #2a2a3a;
+            --text: #ffffff;
+            --text-muted: #6b7280;
+            --accent: #8b5cf6;
+            --accent-secondary: #ec4899;
+            --success: #10b981;
+        }
+        
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .nav-logo {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover { color: var(--text); }
+        
+        .nav-cta {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 14px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 5% 80px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(236, 72, 153, 0.1), transparent);
+            pointer-events: none;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--success);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 32px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .hero h1 {
+            font-size: clamp(48px, 8vw, 80px);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            max-width: 900px;
+        }
+        
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin-bottom: 40px;
+        }
+        
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 60px;
+        }
+        
+        .btn {
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.1);
+        }
+        
+        /* Hero Visual */
+        .hero-visual {
+            width: 100%;
+            max-width: 1200px;
+            position: relative;
+        }
+        
+        .dashboard-mockup {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+        }
+        
+        .mockup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .mockup-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .mockup-stat {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .mockup-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+        
+        .mockup-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 120px 5%;
+            background: var(--bg-secondary);
+        }
+        
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 80px;
+        }
+        
+        .section-tag {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--accent);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        h2 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+        
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .feature-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        /* Process Section */
+        .process {
+            padding: 120px 5%;
+        }
+        
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .process-step {
+            text-align: center;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            margin: 0 auto 20px;
+        }
+        
+        .process-step h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .process-step p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        /* Testimonials */
+        .testimonials {
+            padding: 120px 5%;
+            background: var(--bg-secondary);
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .testimonial {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+        }
+        
+        .testimonial-text {
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .author-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        
+        .author-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .author-role {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        /* Pricing */
+        .pricing {
+            padding: 120px 5%;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 32px;
+            text-align: center;
+        }
+        
+        .pricing-card.featured {
+            border-color: var(--accent);
+            background: linear-gradient(180deg, var(--card) 0%, rgba(139, 92, 246, 0.1) 100%);
+            transform: scale(1.05);
+        }
+        
+        .pricing-header {
+            margin-bottom: 32px;
+        }
+        
+        .pricing-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .pricing-price {
+            font-size: 48px;
+            font-weight: 800;
+        }
+        
+        .pricing-price span {
+            font-size: 16px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        
+        .pricing-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 32px;
+        }
+        
+        .pricing-features li {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--success);
+            font-weight: 700;
+        }
+        
+        /* FAQ */
+        .faq {
+            padding: 120px 5%;
+            background: var(--bg-secondary);
+        }
+        
+        .faq-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .faq-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        
+        .faq-question {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .faq-answer {
+            padding: 0 24px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 120px 5%;
+            text-align: center;
+            background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(139, 92, 246, 0.15), transparent);
+        }
+        
+        .cta-section h2 {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+        
+        .cta-section p {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 40px 5%;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .nav-links { display: none; }
+            
+            .hero h1 {
+                font-size: 40px;
+            }
+            
+            .features-grid,
+            .process-steps,
+            .testimonials-grid,
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-card.featured {
+                transform: none;
+            }
+            
+            .mockup-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            h2 {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-logo">🏠 Airbnb AI Manager</div>
+        <div class="nav-links">
+            <a href="#features">Fonctionnalités</a>
+            <a href="#process">Processus</a>
+            <a href="#pricing">Tarifs</a>
+            <a href="#faq">FAQ</a>
+            <a href="#pricing" class="nav-cta">Essayer gratuitement</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-badge">🚀 Nouveau - Offre de lancement</div>
+        <h1>
+            Gérez vos locations<br>
+            <span class="gradient">en 5 minutes</span><br>
+            automatiquement
+        </h1>
+        <p class="hero-subtitle">
+            L'IA qui répond aux voyageurs, optimise vos prix et gère vos avis.
+            Économisez 15h par semaine et augmentez vos revenus de 30%.
+        </p>
+        <div class="hero-cta">
+            <a href="#pricing" class="btn btn-primary">Essayer gratuitement (14 jours)</a>
+            <a href="#demo" class="btn btn-secondary">Voir la démo</a>
+        </div>
+        
+        <!-- Hero Visual -->
+        <div class="hero-visual">
+            <div class="dashboard-mockup">
+                <div class="mockup-header">
+                    <span style="font-weight: 600;">📊 Dashboard</span>
+                    <span style="color: var(--success); font-size: 13px;">● En ligne</span>
+                </div>
+                <div class="mockup-stats">
+                    <div class="mockup-stat">
+                        <div class="mockup-value">+47%</div>
+                        <div class="mockup-label">Revenus</div>
+                    </div>
+                    <div class="mockup-stat">
+                        <div class="mockup-value">2.3s</div>
+                        <div class="mockup-label">Réponse IA</div>
+                    </div>
+                    <div class="mockup-stat">
+                        <div class="mockup-value">4.9★</div>
+                        <div class="mockup-label">Note moyenne</div>
+                    </div>
+                    <div class="mockup-stat">
+                        <div class="mockup-value">87%</div>
+                        <div class="mockup-label">Occupation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-header">
+            <div class="section-tag">✨ Fonctionnalités</div>
+            <h2>Tout ce dont vous avez besoin</h2>
+            <p class="section-subtitle">Une suite complète d'outils IA pour automatiser votre conciergerie</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Réponses Automatiques</h3>
+                <p>L'IA répond aux voyageurs en 2 secondes, 24h/24. Personnalisé dans leur langue avec un ton professionnel.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Pricing Dynamique</h3>
+                <p>Ajuste automatiquement les prix selon la demande, la saison et la concurrence. +30% de revenus en moyenne.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <h3>Gestion des Avis</h3>
+                <p>Demande des avis aux bons clients au bon moment. Répond aux commentaires pour protéger votre réputation.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Scoring Clients</h3>
+                <p>Identifiez les voyageurs fiables et détectez les profils à risque avant d'accepter la réservation.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="process" id="process">
+        <div class="section-header">
+            <div class="section-tag">🚀 Comment ça marche</div>
+            <h2>En 4 étapes simples</h2>
+            <p class="section-subtitle">De l'inscription à l'automatisation complète en moins de 10 minutes</p>
+        </div>
+        <div class="process-steps">
+            <div class="process-step">
+                <div class="step-number">1</div>
+                <h3>Connectez votre compte</h3>
+                <p>Liaison sécurisée avec Airbnb en 2 minutes. Aucune donnée stockée.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-number">2</div>
+                <h3>Configurez vos règles</h3>
+                <p>Prix minimum, réponses types, préférences. L'IA apprend de votre style.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-number">3</div>
+                <h3>L'IA prend le relais</h3>
+                <p>Réponses auto, pricing dynamique, gestion des avis. Vous surveillez.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-number">4</div>
+                <h3>Optimisez sans cesse</h3>
+                <p>Dashboard temps réel, rapports hebdo, ajustements automatiques.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <div class="section-header">
+            <div class="section-tag">💬 Témoignages</div>
+            <h2>Ce qu'en disent nos clients</h2>
+            <p class="section-subtitle">Des propriétaires et conciergeries qui ont transformé leur gestion</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial">
+                <p class="testimonial-text">"On a gagné 15h par semaine sur la gestion des messages. L'IA répond mieux que nous et nos clients sont plus satisfaits. Un game changer."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">ML</div>
+                    <div>
+                        <div class="author-name">Marie L.</div>
+                        <div class="author-role">Conciergerie à Lyon • 12 biens</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-text">"Le pricing dynamique nous a fait gagner 30% de revenus dès le premier mois. L'agent ajuste les prix mieux que nous ne le faisions."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">TD</div>
+                    <div>
+                        <div class="author-name">Thomas D.</div>
+                        <div class="author-role">Propriétaire à Bordeaux • 5 biens</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-text">"Enfin un outil qui comprend vraiment la gestion Airbnb. Le scoring client nous a évité plusieurs problèmes avec des voyageurs difficiles."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">SM</div>
+                    <div>
+                        <div class="author-name">Sophie M.</div>
+                        <div class="author-role">Conciergerie à Marseille • 8 biens</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="section-header">
+            <div class="section-tag">💎 Tarifs</div>
+            <h2>Des prix simples et transparents</h2>
+            <p class="section-subtitle">Commencez gratuitement, évoluez selon vos besoins</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <div class="pricing-name">Starter</div>
+                    <div class="pricing-price">0€<span>/mois</span></div>
+                    <div class="pricing-desc">Pour tester sans risque</div>
+                </div>
+                <ul class="pricing-features">
+                    <li>1 bien géré</li>
+                    <li>Réponses automatiques</li>
+                    <li>Analytics basiques</li>
+                    <li>Support email</li>
+                </ul>
+                <a href="#" class="btn btn-secondary" style="display: block;">Commencer gratuitement</a>
+            </div>
+            <div class="pricing-card featured">
+                <div class="pricing-header">
+                    <div class="pricing-name">Pro</div>
+                    <div class="pricing-price">49€<span>/mois</span></div>
+                    <div class="pricing-desc">Par bien • Sans engagement</div>
+                </div>
+                <ul class="pricing-features">
+                    <li>Toutes les fonctionnalités</li>
+                    <li>Pricing dynamique avancé</li>
+                    <li>Scoring clients</li>
+                    <li>Support prioritaire 24/7</li>
+                    <li>API access</li>
+                </ul>
+                <a href="#" class="btn btn-primary" style="display: block;">Essayer 14 jours gratuit</a>
+            </div>
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <div class="pricing-name">Conciergerie</div>
+                    <div class="pricing-price">Sur mesure</div>
+                    <div class="pricing-desc">10+ biens</div>
+                </div>
+                <ul class="pricing-features">
+                    <li>Volume discount</li>
+                    <li>Onboarding personnalisé</li>
+                    <li>Account manager dédié</li>
+                    <li>Formation équipe</li>
+                    <li>SLA garanti</li>
+                </ul>
+                <a href="#" class="btn btn-secondary" style="display: block;">Nous contacter</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq" id="faq">
+        <div class="section-header">
+            <div class="section-tag">❓ FAQ</div>
+            <h2>Questions fréquentes</h2>
+            <p class="section-subtitle">Tout ce que vous devez savoir avant de commencer</p>
+        </div>
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Comment l'IA répond aux messages ?</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    L'IA analyse le contexte de la conversation, l'historique du voyageur et vos préférences pour générer une réponse personnalisée en quelques secondes. Elle apprend de vos corrections pour s'améliorer continuellement.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Mes données sont-elles sécurisées ?</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    Absolument. Nous utilisons un chiffrement de bout en bout, sommes conformes RGPD et ne stockons aucune donnée bancaire. Vos conversations restent privées et ne servent jamais à entraîner des modèles.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Puis-je garder le contrôle ?</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    Bien sûr ! Vous définissez les règles et validez les actions importantes. L'IA fait des suggestions mais vous gardez le contrôle final sur les prix, les réservations et les réponses.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Comment annuler mon abonnement ?</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    Vous pouvez annuler à tout moment depuis votre dashboard. Pas de frais cachés, pas d'engagement. Vos données vous appartiennent et peuvent être exportées à tout moment.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2>Prêt à automatiser<br>votre conciergerie ?</h2>
+        <p>Rejoignez les propriétaires qui gagnent du temps et de l'argent avec l'IA</p>
+        <a href="#pricing" class="btn btn-primary" style="font-size: 18px; padding: 18px 36px;">🚀 Essayer gratuitement (14 jours)</a>
+        <p style="margin-top: 20px; font-size: 14px; color: var(--text-muted);">Sans engagement • Annulation à tout moment • Support 24/7</p>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 Airbnb AI Manager. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>

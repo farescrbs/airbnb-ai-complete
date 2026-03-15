@@ -1,0 +1,35 @@
+[SCÈNE 1 - INTRO - 0:00 à 0:15]
+VISUEL: Dashboard avec stats animées
+VOIX: "Bonjour, je suis entrepreneur et je gère 5 locations Airbnb. Avant, je passais 3 heures par jour à répondre aux messages, ajuster les prix et gérer les réservations."
+
+[SCÈNE 2 - PROBLÈME - 0:15 à 0:30]
+VISUEL: Notification spam, téléphone qui sonne
+VOIX: "C'était épuisant. Je manquais des messages, mes prix n'étaient pas optimisés, et je passais mes week-ends à gérer des problèmes au lieu de les profiter."
+
+[SCÈNE 3 - SOLUTION - 0:30 à 0:50]
+VISUEL: Logo Airbnb AI Manager qui apparaît
+VOIX: "Puis j'ai découvert Airbnb AI Manager. En 5 minutes, j'ai connecté mon compte et l'IA a pris le relais."
+
+[SCÈNE 4 - DÉMO 1 - 0:50 à 1:15]
+VISUEL: Chat avec réponse instantanée de l'IA
+VOIX: "Regardez ça. Un voyageur demande la disponibilité. L'IA répond en 2 secondes avec un message personnalisé, professionnel, dans sa langue. Je n'ai rien à faire."
+
+[SCÈNE 5 - DÉMO 2 - 1:15 à 1:35]
+VISUEL: Calendrier avec prix qui changent
+VOIX: "Le pricing dynamique analyse la demande, les événements et la concurrence. Il ajuste automatiquement les prix pour maximiser mes revenus. Résultat : plus 47% ce mois."
+
+[SCÈNE 6 - DÉMO 3 - 1:35 à 1:50]
+VISUEL: Avis 5 étoiles qui apparaissent
+VOIX: "L'IA demande des avis aux bons clients au bon moment. Mes notes sont passées de 4.2 à 4.9 étoiles."
+
+[SCÈNE 7 - RÉSULTATS - 1:50 à 2:05]
+VISUEL: Stats finales avec graphiques
+VOIX: "Résultat final : 15 heures économisées par semaine, 30% de revenus en plus, et je peux enfin profiter de mon temps libre."
+
+[SCÈNE 8 - CTA - 2:05 à 2:20]
+VISUEL: Page de prix avec bouton "Essayer gratuitement"
+VOIX: "Essayez Airbnb AI Manager gratuitement pendant 14 jours. Aucune carte bancaire requise. Le lien est en description."
+
+[FIN]
+VISUEL: Logo + URL
+VOIX: "Airbnb AI Manager. Votre concierge virtuel 24 sur 24."

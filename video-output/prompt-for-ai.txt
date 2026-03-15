@@ -1,0 +1,23 @@
+Tu es un expert en création de vidéos de démo SaaS. 
+
+Crée une vidéo de 2 minutes pour "Airbnb AI Manager" avec cette structure:
+
+PRODUIT: Gestion Airbnb automatisée par IA
+PUBLIC: Propriétaires Airbnb et conciergeries
+OBJECTIF: Montrer la valeur et convertir en essai gratuit
+
+RESSOURCES VISUELLES:
+- Démo interactive: https://demo-mu-nine-17.vercel.app
+- Landing page: https://landing-page-zeta-five-41.vercel.app
+
+SCRIPT FOURNI DANS: script.txt
+
+EXIGENCES:
+- Ton professionnel mais accessible
+- Rythme dynamique (changement de scène toutes les 15-20s)
+- Musique de fond légère (pas de droits d'auteur)
+- Sous-titres en français
+- Call-to-action clair à la fin
+
+FORMAT: MP4 1920x1080 30fps
+DURÉE: 2 minutes max
