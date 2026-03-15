@@ -3,26 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Airbnb AI Manager - Gérez vos locations en 5 minutes</title>
-    <meta name="description" content="L'IA qui gère vos locations Airbnb automatiquement. Réponses instantanées, pricing dynamique, gestion des avis. Économisez 15h par semaine.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>Airbnb AI Manager - Votre conciergerie propulsee par l'IA</title>
+    <meta name="description" content="L'IA qui gere vos locations Airbnb automatiquement. Reponses instantanees, pricing dynamique, gestion des avis. Economisez 15h par semaine.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        
+
         :root {
-            --bg: #0a0a0f;
-            --bg-secondary: #111118;
-            --card: #161620;
-            --border: #2a2a3a;
-            --text: #ffffff;
-            --text-muted: #6b7280;
-            --accent: #8b5cf6;
-            --accent-secondary: #ec4899;
+            --bg: #06060b;
+            --bg-secondary: #0c0c14;
+            --card: rgba(255,255,255,0.03);
+            --card-solid: #12121e;
+            --border: rgba(255,255,255,0.06);
+            --border-light: rgba(255,255,255,0.1);
+            --text: #f0f0f5;
+            --text-muted: #7a7a90;
+            --text-dim: #4a4a5a;
+            --accent: #7c3aed;
+            --accent-light: #a78bfa;
+            --accent-pink: #ec4899;
+            --accent-cyan: #06b6d4;
             --success: #10b981;
+            --warning: #f59e0b;
+            --glow-purple: rgba(124, 58, 237, 0.15);
+            --glow-pink: rgba(236, 72, 153, 0.1);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
         }
-        
+
         html { scroll-behavior: smooth; }
-        
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
@@ -30,828 +42,1769 @@
             line-height: 1.6;
             overflow-x: hidden;
         }
-        
-        /* Navigation */
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+        }
+
+        /* Noise texture overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.015;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 256px 256px;
+        }
+
+        /* Scroll reveal animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+
+        /* ====== NAVIGATION ====== */
         nav {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 1000;
-            padding: 20px 5%;
+            padding: 14px 28px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(10, 10, 15, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
+            background: rgba(12, 12, 20, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            width: 90%;
+            max-width: 1100px;
         }
-        
+
         .nav-logo {
-            font-size: 22px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            white-space: nowrap;
         }
-        
+
+        .nav-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-pink));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            -webkit-text-fill-color: white;
+        }
+
         .nav-links {
             display: flex;
-            gap: 40px;
+            gap: 32px;
             align-items: center;
         }
-        
+
         .nav-links a {
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             transition: color 0.3s;
+            letter-spacing: 0.02em;
         }
-        
+
         .nav-links a:hover { color: var(--text); }
-        
+
         .nav-cta {
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
+            background: white;
+            color: #06060b !important;
+            padding: 10px 22px;
+            border-radius: 50px;
+            font-weight: 600 !important;
             text-decoration: none;
-            font-size: 14px;
-            transition: transform 0.3s, box-shadow 0.3s;
+            font-size: 13px;
+            transition: all 0.3s;
+            -webkit-text-fill-color: initial;
         }
-        
+
         .nav-cta:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255,255,255,0.15);
         }
-        
-        /* Hero Section */
+
+        /* Mobile menu */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .menu-toggle span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: var(--text);
+            margin: 5px 0;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        /* ====== HERO ====== */
         .hero {
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
-            padding: 120px 5% 80px;
+            padding: 140px 5% 80px;
             position: relative;
             overflow: hidden;
         }
-        
-        .hero::before {
-            content: '';
+
+        /* Animated background blobs */
+        .hero-bg {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.15), transparent),
-                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(236, 72, 153, 0.1), transparent);
+            top: 0; left: 0; right: 0; bottom: 0;
+            overflow: hidden;
             pointer-events: none;
         }
-        
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            animation: blobFloat 20s ease-in-out infinite;
+        }
+
+        .blob-1 {
+            width: 600px;
+            height: 600px;
+            background: rgba(124, 58, 237, 0.12);
+            top: -200px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: rgba(236, 72, 153, 0.08);
+            top: 100px;
+            right: -150px;
+            animation-delay: -7s;
+        }
+
+        .blob-3 {
+            width: 400px;
+            height: 400px;
+            background: rgba(6, 182, 212, 0.06);
+            bottom: -100px;
+            left: 30%;
+            animation-delay: -14s;
+        }
+
+        @keyframes blobFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -40px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(40px, 30px) scale(1.05); }
+        }
+
+        .hero-content {
+            max-width: 1300px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-left { max-width: 580px; }
+
         .hero-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
             color: var(--success);
             padding: 8px 16px;
             border-radius: 50px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             margin-bottom: 32px;
-            animation: pulse 2s infinite;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+
+        .hero-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: badgePulse 2s ease-in-out infinite;
         }
-        
+
+        @keyframes badgePulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+        }
+
         .hero h1 {
-            font-size: clamp(48px, 8vw, 80px);
-            font-weight: 800;
-            line-height: 1.1;
+            font-size: clamp(42px, 5.5vw, 68px);
+            font-weight: 700;
+            line-height: 1.08;
             margin-bottom: 24px;
-            max-width: 900px;
+            letter-spacing: -0.03em;
         }
-        
+
         .hero h1 .gradient {
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-pink) 50%, var(--accent-cyan) 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: gradientShift 5s ease-in-out infinite;
         }
-        
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+        }
+
         .hero-subtitle {
-            font-size: 20px;
+            font-size: 17px;
             color: var(--text-muted);
-            max-width: 600px;
+            max-width: 480px;
             margin-bottom: 40px;
+            line-height: 1.7;
         }
-        
+
         .hero-cta {
             display: flex;
             gap: 16px;
-            margin-bottom: 60px;
+            margin-bottom: 48px;
         }
-        
+
         .btn {
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 16px;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-size: 14px;
             font-weight: 600;
             text-decoration: none;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            border: none;
+            cursor: pointer;
+            letter-spacing: 0.01em;
         }
-        
+
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-            color: white;
-            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.3);
+            background: white;
+            color: #06060b;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 8px 30px rgba(0,0,0,0.3);
         }
-        
+
         .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.2), 0 20px 50px rgba(0,0,0,0.4), 0 0 60px rgba(124,58,237,0.15);
         }
-        
+
         .btn-secondary {
-            background: var(--card);
+            background: transparent;
             color: var(--text);
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-light);
         }
-        
+
         .btn-secondary:hover {
-            border-color: var(--accent);
-            background: rgba(139, 92, 246, 0.1);
+            border-color: var(--accent-light);
+            background: rgba(124, 58, 237, 0.08);
         }
-        
-        /* Hero Visual */
-        .hero-visual {
-            width: 100%;
-            max-width: 1200px;
-            position: relative;
+
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--accent), var(--accent-pink));
+            color: white;
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.3);
         }
-        
-        .dashboard-mockup {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+
+        .btn-gradient:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(124, 58, 237, 0.4);
         }
-        
-        .mockup-header {
+
+        .hero-stats {
             display: flex;
-            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .hero-stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text), var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-stat-label {
+            font-size: 12px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 2px;
+        }
+
+        /* Hero right - Dashboard mockup */
+        .hero-right {
+            position: relative;
+            perspective: 1200px;
+        }
+
+        .dashboard-mockup {
+            background: rgba(18, 18, 30, 0.8);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            padding: 20px;
+            box-shadow:
+                0 50px 100px -20px rgba(0,0,0,0.6),
+                0 0 0 1px rgba(255,255,255,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+            transform: rotateY(-5deg) rotateX(2deg);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(20px);
+        }
+
+        .dashboard-mockup:hover {
+            transform: rotateY(-2deg) rotateX(1deg);
+        }
+
+        .mockup-topbar {
+            display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            gap: 8px;
             padding-bottom: 16px;
+            margin-bottom: 16px;
             border-bottom: 1px solid var(--border);
         }
-        
-        .mockup-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 20px;
+
+        .mockup-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
         }
-        
-        .mockup-stat {
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-        }
-        
-        .mockup-value {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--accent);
-        }
-        
-        .mockup-label {
+        .mockup-dot.red { background: #ff5f57; }
+        .mockup-dot.yellow { background: #ffbd2e; }
+        .mockup-dot.green { background: #28c840; }
+
+        .mockup-topbar-title {
             font-size: 12px;
             color: var(--text-muted);
+            margin-left: 8px;
+            font-weight: 500;
+        }
+
+        .mockup-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .mockup-stat {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+        }
+
+        .mockup-stat-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+
+        .mockup-stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .mockup-stat-value.purple { color: var(--accent-light); }
+        .mockup-stat-value.green { color: var(--success); }
+        .mockup-stat-value.pink { color: var(--accent-pink); }
+
+        .mockup-stat-change {
+            font-size: 11px;
+            color: var(--success);
             margin-top: 4px;
         }
-        
-        /* Features Section */
+
+        /* Mockup chart */
+        .mockup-chart {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            height: 120px;
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, var(--accent), var(--accent-light));
+            border-radius: 4px 4px 0 0;
+            transition: height 1s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0.7;
+            min-height: 8px;
+        }
+
+        .chart-bar:nth-child(odd) {
+            background: linear-gradient(to top, var(--accent-pink), rgba(236,72,153,0.6));
+        }
+
+        /* Floating notification cards */
+        .float-card {
+            position: absolute;
+            background: rgba(18, 18, 30, 0.9);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            animation: floatCard 6s ease-in-out infinite;
+            z-index: 2;
+        }
+
+        .float-card-1 {
+            top: 20px;
+            right: -30px;
+            animation-delay: 0s;
+        }
+
+        .float-card-2 {
+            bottom: 40px;
+            left: -40px;
+            animation-delay: -3s;
+        }
+
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .float-card-title {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .float-card-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .float-card-value .dot {
+            width: 8px; height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        /* ====== SOCIAL PROOF BAR ====== */
+        .social-proof {
+            padding: 60px 5%;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .social-proof-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+            flex-wrap: wrap;
+        }
+
+        .proof-stat {
+            text-align: center;
+        }
+
+        .proof-stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text), var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .proof-stat-label {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        .proof-divider {
+            width: 1px;
+            height: 48px;
+            background: var(--border);
+        }
+
+        /* ====== FEATURES - BENTO GRID ====== */
         .features {
             padding: 120px 5%;
-            background: var(--bg-secondary);
+            position: relative;
         }
-        
+
+        .features::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse 60% 40% at 50% 0%, var(--glow-purple), transparent);
+            pointer-events: none;
+        }
+
         .section-header {
             text-align: center;
-            max-width: 700px;
-            margin: 0 auto 80px;
+            max-width: 600px;
+            margin: 0 auto 72px;
+            position: relative;
         }
-        
+
         .section-tag {
             display: inline-block;
-            background: rgba(139, 92, 246, 0.1);
-            color: var(--accent);
-            padding: 8px 16px;
+            color: var(--accent-light);
+            padding: 6px 14px;
             border-radius: 50px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             margin-bottom: 16px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            background: rgba(124, 58, 237, 0.06);
         }
-        
+
         h2 {
-            font-size: 48px;
-            font-weight: 800;
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 700;
             margin-bottom: 16px;
-            line-height: 1.2;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
         }
-        
+
         .section-subtitle {
-            font-size: 18px;
+            font-size: 16px;
             color: var(--text-muted);
+            line-height: 1.6;
         }
-        
-        .features-grid {
+
+        .bento-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 24px;
-            max-width: 1000px;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto auto;
+            gap: 16px;
+            max-width: 1100px;
             margin: 0 auto;
         }
-        
-        .feature-card {
+
+        .bento-card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 32px;
-            transition: all 0.3s;
+            border-radius: var(--radius-xl);
+            padding: 36px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
         }
-        
-        .feature-card:hover {
+
+        .bento-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .bento-card:hover::before { opacity: 1; }
+
+        .bento-card:hover {
+            border-color: var(--border-light);
+            background: rgba(255,255,255,0.04);
             transform: translateY(-4px);
-            border-color: var(--accent);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        
-        .feature-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-            border-radius: 12px;
+
+        .bento-card.span-2 {
+            grid-column: span 2;
+        }
+
+        .bento-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            position: relative;
         }
-        
-        .feature-card h3 {
+
+        .bento-icon.purple {
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+        }
+        .bento-icon.pink {
+            background: rgba(236, 72, 153, 0.1);
+            border: 1px solid rgba(236, 72, 153, 0.15);
+        }
+        .bento-icon.cyan {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.15);
+        }
+        .bento-icon.green {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+        }
+        .bento-icon.amber {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+        }
+
+        .bento-card h3 {
             font-size: 20px;
-            font-weight: 700;
+            font-weight: 600;
             margin-bottom: 10px;
+            letter-spacing: -0.01em;
         }
-        
-        .feature-card p {
+
+        .bento-card p {
             color: var(--text-muted);
-            font-size: 15px;
-            line-height: 1.6;
+            font-size: 14px;
+            line-height: 1.7;
         }
-        
-        /* Process Section */
+
+        .bento-visual {
+            margin-top: 24px;
+            padding: 16px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+
+        .bento-chat {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-msg {
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            max-width: 85%;
+            line-height: 1.5;
+        }
+
+        .chat-msg.guest {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            align-self: flex-start;
+        }
+
+        .chat-msg.ai {
+            background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(236,72,153,0.1));
+            border: 1px solid rgba(124,58,237,0.2);
+            color: var(--text);
+            align-self: flex-end;
+        }
+
+        .chat-msg .ai-tag {
+            font-size: 9px;
+            color: var(--accent-light);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        /* ====== PROCESS / TIMELINE ====== */
         .process {
             padding: 120px 5%;
+            background: var(--bg-secondary);
+            position: relative;
+            overflow: hidden;
         }
-        
-        .process-steps {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 32px;
-            max-width: 1200px;
+
+        .process::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse 50% 40% at 80% 50%, var(--glow-pink), transparent);
+            pointer-events: none;
+        }
+
+        .timeline {
+            max-width: 1000px;
             margin: 0 auto;
+            position: relative;
         }
-        
-        .process-step {
-            text-align: center;
+
+        .timeline-line {
+            position: absolute;
+            left: 32px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--accent-pink), transparent);
         }
-        
-        .step-number {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+
+        .timeline-step {
+            display: flex;
+            gap: 32px;
+            margin-bottom: 56px;
+            position: relative;
+        }
+
+        .timeline-step:last-child { margin-bottom: 0; }
+
+        .timeline-dot {
+            width: 64px;
+            height: 64px;
+            min-width: 64px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            font-weight: 800;
-            margin: 0 auto 20px;
-        }
-        
-        .process-step h3 {
-            font-size: 18px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
             font-weight: 700;
+            color: var(--accent-light);
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 0 30px rgba(124,58,237,0.15);
+        }
+
+        .timeline-content {
+            padding-top: 14px;
+        }
+
+        .timeline-content h3 {
+            font-size: 22px;
+            font-weight: 600;
             margin-bottom: 8px;
+            letter-spacing: -0.01em;
         }
-        
-        .process-step p {
+
+        .timeline-content p {
             color: var(--text-muted);
-            font-size: 14px;
+            font-size: 15px;
+            line-height: 1.7;
+            max-width: 500px;
         }
-        
-        /* Testimonials */
+
+        /* ====== TESTIMONIALS CAROUSEL ====== */
         .testimonials {
             padding: 120px 5%;
-            background: var(--bg-secondary);
+            position: relative;
         }
-        
-        .testimonials-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+
+        .testimonials::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse 50% 40% at 20% 50%, var(--glow-purple), transparent);
+            pointer-events: none;
+        }
+
+        .testimonials-track {
+            display: flex;
             gap: 24px;
             max-width: 1200px;
             margin: 0 auto;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 20px;
         }
-        
-        .testimonial {
+
+        .testimonials-track::-webkit-scrollbar { display: none; }
+
+        .testimonial-card {
+            min-width: 380px;
+            max-width: 380px;
+            scroll-snap-align: start;
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 28px;
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            position: relative;
         }
-        
+
+        .testimonial-quote {
+            font-size: 60px;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--accent), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            font-family: Georgia, serif;
+        }
+
+        .testimonial-stars {
+            color: var(--warning);
+            font-size: 14px;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
         .testimonial-text {
             font-size: 15px;
             line-height: 1.7;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             color: var(--text);
         }
-        
+
         .testimonial-author {
             display: flex;
             align-items: center;
             gap: 12px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
         }
-        
+
         .author-avatar {
             width: 44px;
             height: 44px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            background: linear-gradient(135deg, var(--accent), var(--accent-pink));
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
+            font-size: 14px;
         }
-        
+
         .author-name {
             font-weight: 600;
             font-size: 14px;
         }
-        
+
         .author-role {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-muted);
+            margin-top: 2px;
         }
-        
-        /* Pricing */
+
+        /* ====== PRICING ====== */
         .pricing {
             padding: 120px 5%;
+            background: var(--bg-secondary);
+            position: relative;
         }
-        
+
+        .pricing-toggle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 60px;
+        }
+
+        .pricing-toggle-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .pricing-toggle-label.active { color: var(--text); }
+
+        .toggle-switch {
+            width: 52px;
+            height: 28px;
+            background: var(--border);
+            border-radius: 50px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, var(--accent), var(--accent-pink));
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+
+        .pricing-save {
+            font-size: 12px;
+            color: var(--success);
+            font-weight: 600;
+            background: rgba(16,185,129,0.1);
+            padding: 4px 10px;
+            border-radius: 50px;
+        }
+
         .pricing-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
+            gap: 20px;
             max-width: 1100px;
             margin: 0 auto;
+            align-items: stretch;
         }
-        
+
         .pricing-card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 20px;
+            border-radius: var(--radius-xl);
             padding: 40px 32px;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
+
+        .pricing-card:hover {
+            transform: translateY(-4px);
+        }
+
         .pricing-card.featured {
             border-color: var(--accent);
-            background: linear-gradient(180deg, var(--card) 0%, rgba(139, 92, 246, 0.1) 100%);
-            transform: scale(1.05);
+            background: linear-gradient(180deg, rgba(124,58,237,0.08) 0%, var(--card) 100%);
+            position: relative;
+            box-shadow: 0 0 60px rgba(124,58,237,0.1);
         }
-        
+
+        .pricing-card.featured::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: var(--radius-xl);
+            padding: 1px;
+            background: linear-gradient(180deg, var(--accent), transparent 60%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .pricing-popular {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--accent), var(--accent-pink));
+            color: white;
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
         .pricing-header {
             margin-bottom: 32px;
         }
-        
+
         .pricing-name {
-            font-size: 14px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
             font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            color: var(--text);
         }
-        
+
         .pricing-price {
+            font-family: 'Space Grotesk', sans-serif;
             font-size: 48px;
-            font-weight: 800;
+            font-weight: 700;
+            letter-spacing: -0.03em;
         }
-        
+
         .pricing-price span {
             font-size: 16px;
             color: var(--text-muted);
-            font-weight: 500;
+            font-weight: 400;
         }
-        
+
         .pricing-desc {
-            color: var(--text-muted);
-            font-size: 14px;
+            color: var(--text-dim);
+            font-size: 13px;
             margin-top: 8px;
         }
-        
+
         .pricing-features {
             list-style: none;
-            text-align: left;
             margin-bottom: 32px;
+            flex: 1;
         }
-        
+
         .pricing-features li {
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
             display: flex;
             align-items: center;
             gap: 10px;
             font-size: 14px;
+            color: var(--text-muted);
         }
-        
-        .pricing-features li::before {
-            content: '✓';
+
+        .pricing-features li .check {
+            width: 18px;
+            height: 18px;
+            background: rgba(16,185,129,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
             color: var(--success);
-            font-weight: 700;
+            flex-shrink: 0;
         }
-        
-        /* FAQ */
+
+        .pricing-btn {
+            display: block;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* ====== FAQ ====== */
         .faq {
             padding: 120px 5%;
-            background: var(--bg-secondary);
         }
-        
+
         .faq-list {
-            max-width: 800px;
+            max-width: 720px;
             margin: 0 auto;
         }
-        
+
         .faq-item {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            margin-bottom: 12px;
-            overflow: hidden;
+            border-bottom: 1px solid var(--border);
         }
-        
+
         .faq-question {
-            padding: 20px 24px;
+            padding: 24px 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
             font-weight: 600;
+            font-size: 16px;
+            transition: color 0.3s;
+            user-select: none;
         }
-        
+
+        .faq-question:hover { color: var(--accent-light); }
+
+        .faq-arrow {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .faq-item.open .faq-arrow {
+            transform: rotate(45deg);
+            border-color: var(--accent);
+            color: var(--accent-light);
+        }
+
         .faq-answer {
-            padding: 0 24px 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.4s;
+        }
+
+        .faq-item.open .faq-answer {
+            max-height: 200px;
+        }
+
+        .faq-answer-inner {
+            padding-bottom: 24px;
             color: var(--text-muted);
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.8;
         }
-        
-        /* CTA Section */
+
+        /* ====== CTA SECTION ====== */
         .cta-section {
-            padding: 120px 5%;
+            padding: 140px 5%;
             text-align: center;
-            background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(139, 92, 246, 0.15), transparent);
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse 50% 50% at 50% 50%, rgba(124,58,237,0.12), transparent),
+                radial-gradient(ellipse 40% 40% at 30% 70%, rgba(236,72,153,0.08), transparent),
+                radial-gradient(ellipse 40% 40% at 70% 30%, rgba(6,182,212,0.06), transparent);
+            pointer-events: none;
+        }
+
         .cta-section h2 {
-            font-size: 56px;
-            margin-bottom: 16px;
+            font-size: clamp(36px, 5vw, 56px);
+            margin-bottom: 20px;
+            position: relative;
         }
-        
+
         .cta-section p {
-            font-size: 20px;
+            font-size: 18px;
             color: var(--text-muted);
             margin-bottom: 40px;
+            position: relative;
         }
-        
-        /* Footer */
+
+        .cta-section .btn {
+            position: relative;
+            font-size: 16px;
+            padding: 18px 40px;
+        }
+
+        .cta-trust {
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--text-dim);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .cta-trust span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ====== FOOTER ====== */
         footer {
-            padding: 40px 5%;
+            padding: 60px 5% 40px;
             border-top: 1px solid var(--border);
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 14px;
         }
-        
-        /* Responsive */
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+
+        .footer-brand .nav-logo {
+            margin-bottom: 16px;
+        }
+
+        .footer-brand p {
+            color: var(--text-dim);
+            font-size: 13px;
+            line-height: 1.7;
+            max-width: 280px;
+        }
+
+        .footer-col h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .footer-col a {
+            display: block;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 0;
+            transition: color 0.3s;
+        }
+
+        .footer-col a:hover { color: var(--text); }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-dim);
+            font-size: 12px;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 16px;
+        }
+
+        .footer-social a {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .footer-social a:hover {
+            border-color: var(--accent);
+            color: var(--accent-light);
+            background: rgba(124,58,237,0.1);
+        }
+
+        /* ====== RESPONSIVE ====== */
         @media (max-width: 1024px) {
-            .nav-links { display: none; }
-            
-            .hero h1 {
-                font-size: 40px;
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 60px;
+                text-align: center;
             }
-            
-            .features-grid,
-            .process-steps,
-            .testimonials-grid,
+
+            .hero-left { max-width: 100%; margin: 0 auto; }
+            .hero-cta { justify-content: center; }
+            .hero-stats { justify-content: center; }
+            .hero-subtitle { margin-left: auto; margin-right: auto; }
+
+            .dashboard-mockup {
+                transform: none;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            .dashboard-mockup:hover { transform: none; }
+
+            .float-card { display: none; }
+
+            .bento-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .bento-card.span-2 { grid-column: span 2; }
+
             .pricing-grid {
                 grid-template-columns: 1fr;
+                max-width: 440px;
             }
-            
-            .pricing-card.featured {
-                transform: none;
+
+            .footer-inner {
+                grid-template-columns: 1fr 1fr;
             }
-            
-            .mockup-stats {
-                grid-template-columns: repeat(2, 1fr);
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                width: 94%;
+                padding: 12px 20px;
             }
-            
-            h2 {
-                font-size: 36px;
+
+            .nav-links { display: none; }
+            .nav-links.open {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background: rgba(12,12,20,0.95);
+                backdrop-filter: blur(24px);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-xl);
+                padding: 24px;
+                gap: 16px;
             }
+            .menu-toggle { display: block; }
+
+            .hero { padding: 120px 5% 60px; }
+
+            .hero-cta { flex-direction: column; align-items: center; }
+
+            .hero-stats { flex-direction: column; gap: 20px; }
+
+            .bento-grid { grid-template-columns: 1fr; }
+            .bento-card.span-2 { grid-column: span 1; }
+
+            .timeline-dot {
+                width: 48px; height: 48px; min-width: 48px;
+                font-size: 18px;
+            }
+            .timeline-line { left: 24px; }
+
+            .testimonial-card { min-width: 300px; }
+
+            .social-proof-inner { gap: 32px; }
+            .proof-divider { display: none; }
+
+            .footer-inner { grid-template-columns: 1fr; gap: 32px; }
+            .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+
+            h2 { font-size: 32px; }
+        }
+
+        @media (max-width: 480px) {
+            .mockup-stats { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 36px; }
+            .pricing-card { padding: 32px 24px; }
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
     <nav>
-        <div class="nav-logo">🏠 Airbnb AI Manager</div>
-        <div class="nav-links">
-            <a href="#features">Fonctionnalités</a>
-            <a href="#process">Processus</a>
-            <a href="#pricing">Tarifs</a>
-            <a href="#faq">FAQ</a>
-            <a href="#pricing" class="nav-cta">Essayer gratuitement</a>
+        <div class="nav-logo">
+            <div class="nav-logo-icon">A</div>
+            Airbnb AI
         </div>
+        <div class="nav-links" id="navLinks">
+            <a href="#features">Fonctionnalites</a>
+            <a href="#process">Processus</a>
+            <a href="#testimonials">Avis</a>
+            <a href="#pricing">Tarifs</a>
+            <a href="#pricing" class="nav-cta">Commencer</a>
+        </div>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero" id="hero">
-        <div class="hero-badge">🚀 Nouveau - Offre de lancement</div>
-        <h1>
-            Gérez vos locations<br>
-            <span class="gradient">en 5 minutes</span><br>
-            automatiquement
-        </h1>
-        <p class="hero-subtitle">
-            L'IA qui répond aux voyageurs, optimise vos prix et gère vos avis.
-            Économisez 15h par semaine et augmentez vos revenus de 30%.
-        </p>
-        <div class="hero-cta">
-            <a href="#pricing" class="btn btn-primary">Essayer gratuitement (14 jours)</a>
-            <a href="#demo" class="btn btn-secondary">Voir la démo</a>
+        <div class="hero-bg">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            <div class="blob blob-3"></div>
         </div>
-        
-        <!-- Hero Visual -->
-        <div class="hero-visual">
-            <div class="dashboard-mockup">
-                <div class="mockup-header">
-                    <span style="font-weight: 600;">📊 Dashboard</span>
-                    <span style="color: var(--success); font-size: 13px;">● En ligne</span>
+        <div class="hero-content">
+            <div class="hero-left">
+                <div class="hero-badge">Nouveau &mdash; Offre de lancement</div>
+                <h1>
+                    Votre conciergerie<br>
+                    <span class="gradient">propulsee par l'IA</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Reponses instantanees aux voyageurs, pricing dynamique, gestion des avis.
+                    L'intelligence artificielle qui vous fait gagner 15h par semaine.
+                </p>
+                <div class="hero-cta">
+                    <a href="#pricing" class="btn btn-primary">Essayer gratuitement</a>
+                    <a href="#features" class="btn btn-secondary">Decouvrir</a>
                 </div>
-                <div class="mockup-stats">
-                    <div class="mockup-stat">
-                        <div class="mockup-value">+47%</div>
-                        <div class="mockup-label">Revenus</div>
+                <div class="hero-stats">
+                    <div>
+                        <div class="hero-stat-value" data-count="2847">0</div>
+                        <div class="hero-stat-label">Hotes actifs</div>
                     </div>
-                    <div class="mockup-stat">
-                        <div class="mockup-value">2.3s</div>
-                        <div class="mockup-label">Réponse IA</div>
+                    <div>
+                        <div class="hero-stat-value" data-count="15" data-suffix="h">0</div>
+                        <div class="hero-stat-label">Economisees / semaine</div>
                     </div>
-                    <div class="mockup-stat">
-                        <div class="mockup-value">4.9★</div>
-                        <div class="mockup-label">Note moyenne</div>
+                    <div>
+                        <div class="hero-stat-value" data-count="30" data-prefix="+" data-suffix="%">0</div>
+                        <div class="hero-stat-label">De revenus</div>
                     </div>
-                    <div class="mockup-stat">
-                        <div class="mockup-value">87%</div>
-                        <div class="mockup-label">Occupation</div>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="float-card float-card-1">
+                    <div class="float-card-title">Message IA envoye</div>
+                    <div class="float-card-value">
+                        <span class="dot"></span>
+                        Repondu en 2.1s
                     </div>
+                </div>
+                <div class="float-card float-card-2">
+                    <div class="float-card-title">Revenus ce mois</div>
+                    <div class="float-card-value" style="color: var(--success);">12 480 &euro;</div>
+                </div>
+                <div class="dashboard-mockup">
+                    <div class="mockup-topbar">
+                        <div class="mockup-dot red"></div>
+                        <div class="mockup-dot yellow"></div>
+                        <div class="mockup-dot green"></div>
+                        <span class="mockup-topbar-title">Dashboard &mdash; Vue d'ensemble</span>
+                    </div>
+                    <div class="mockup-stats">
+                        <div class="mockup-stat">
+                            <div class="mockup-stat-label">Revenus</div>
+                            <div class="mockup-stat-value purple">12 480&euro;</div>
+                            <div class="mockup-stat-change">&uarr; +47%</div>
+                        </div>
+                        <div class="mockup-stat">
+                            <div class="mockup-stat-label">Occupation</div>
+                            <div class="mockup-stat-value green">87%</div>
+                            <div class="mockup-stat-change">&uarr; +12%</div>
+                        </div>
+                        <div class="mockup-stat">
+                            <div class="mockup-stat-label">Note</div>
+                            <div class="mockup-stat-value pink">4.9</div>
+                            <div class="mockup-stat-change">&uarr; +0.3</div>
+                        </div>
+                    </div>
+                    <div class="mockup-chart" id="mockupChart"></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Features Section -->
+    <!-- Social Proof Bar -->
+    <section class="social-proof reveal">
+        <div class="social-proof-inner">
+            <div class="proof-stat">
+                <div class="proof-stat-value" data-count="2847">0</div>
+                <div class="proof-stat-label">Hotes actifs</div>
+            </div>
+            <div class="proof-divider"></div>
+            <div class="proof-stat">
+                <div class="proof-stat-value" data-count="98" data-suffix="%">0</div>
+                <div class="proof-stat-label">Satisfaction</div>
+            </div>
+            <div class="proof-divider"></div>
+            <div class="proof-stat">
+                <div class="proof-stat-value" data-count="1" data-suffix="M+">0</div>
+                <div class="proof-stat-label">Messages envoyes</div>
+            </div>
+            <div class="proof-divider"></div>
+            <div class="proof-stat">
+                <div class="proof-stat-value" data-count="4" data-suffix=".9/5">0</div>
+                <div class="proof-stat-label">Note moyenne</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features - Bento Grid -->
     <section class="features" id="features">
-        <div class="section-header">
-            <div class="section-tag">✨ Fonctionnalités</div>
-            <h2>Tout ce dont vous avez besoin</h2>
-            <p class="section-subtitle">Une suite complète d'outils IA pour automatiser votre conciergerie</p>
+        <div class="section-header reveal">
+            <div class="section-tag">Fonctionnalites</div>
+            <h2>Tout automatiser.<br>Ne rien manquer.</h2>
+            <p class="section-subtitle">Une suite d'outils IA qui travaillent pour vous, 24h/24</p>
         </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">💬</div>
-                <h3>Réponses Automatiques</h3>
-                <p>L'IA répond aux voyageurs en 2 secondes, 24h/24. Personnalisé dans leur langue avec un ton professionnel.</p>
+        <div class="bento-grid">
+            <div class="bento-card span-2 reveal">
+                <div class="bento-icon purple">&#x1f4ac;</div>
+                <h3>Reponses automatiques intelligentes</h3>
+                <p>L'IA repond aux voyageurs en 2 secondes, 24h/24. Elle detecte la langue, adapte le ton et personnalise chaque message en fonction du contexte de la reservation.</p>
+                <div class="bento-visual">
+                    <div class="bento-chat">
+                        <div class="chat-msg guest">Bonjour ! Est-ce que l'appartement est proche du metro ? Et y a-t-il un parking ?</div>
+                        <div class="chat-msg ai">
+                            <div class="ai-tag">IA &bull; 2.1s</div>
+                            Bonjour ! Oui, la station Republique est a 3 min a pied. Un parking souterrain Vinci est accessible a 50m (12&euro;/jour). Je vous envoie les details !
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">💰</div>
-                <h3>Pricing Dynamique</h3>
-                <p>Ajuste automatiquement les prix selon la demande, la saison et la concurrence. +30% de revenus en moyenne.</p>
+            <div class="bento-card reveal reveal-delay-1">
+                <div class="bento-icon green">&#x1f4b0;</div>
+                <h3>Pricing dynamique</h3>
+                <p>Ajuste vos prix en temps reel selon la demande, la saison, les evenements locaux et la concurrence. +30% de revenus en moyenne.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">⭐</div>
-                <h3>Gestion des Avis</h3>
-                <p>Demande des avis aux bons clients au bon moment. Répond aux commentaires pour protéger votre réputation.</p>
+            <div class="bento-card reveal reveal-delay-2">
+                <div class="bento-icon amber">&#x2b50;</div>
+                <h3>Gestion des avis</h3>
+                <p>Sollicite les avis au moment optimal et repond aux commentaires pour proteger votre reputation en ligne.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">🤖</div>
-                <h3>Scoring Clients</h3>
-                <p>Identifiez les voyageurs fiables et détectez les profils à risque avant d'accepter la réservation.</p>
+            <div class="bento-card reveal reveal-delay-3">
+                <div class="bento-icon cyan">&#x1f916;</div>
+                <h3>Scoring voyageurs</h3>
+                <p>Identifiez les profils fiables et detectez les risques avant d'accepter une reservation. Tranquillite garantie.</p>
+            </div>
+            <div class="bento-card span-2 reveal reveal-delay-4">
+                <div class="bento-icon pink">&#x1f4ca;</div>
+                <h3>Analytics & rapports</h3>
+                <p>Dashboard en temps reel, rapports hebdomadaires automatiques, comparaison avec le marche. Prenez les bonnes decisions basees sur la data, pas l'intuition.</p>
             </div>
         </div>
     </section>
 
-    <!-- Process Section -->
+    <!-- Process / How it works -->
     <section class="process" id="process">
-        <div class="section-header">
-            <div class="section-tag">🚀 Comment ça marche</div>
-            <h2>En 4 étapes simples</h2>
-            <p class="section-subtitle">De l'inscription à l'automatisation complète en moins de 10 minutes</p>
+        <div class="section-header reveal">
+            <div class="section-tag">Comment ca marche</div>
+            <h2>Operationnel en 10 minutes</h2>
+            <p class="section-subtitle">De l'inscription a l'automatisation complete, sans aucune competence technique</p>
         </div>
-        <div class="process-steps">
-            <div class="process-step">
-                <div class="step-number">1</div>
-                <h3>Connectez votre compte</h3>
-                <p>Liaison sécurisée avec Airbnb en 2 minutes. Aucune donnée stockée.</p>
+        <div class="timeline">
+            <div class="timeline-line"></div>
+            <div class="timeline-step reveal">
+                <div class="timeline-dot">1</div>
+                <div class="timeline-content">
+                    <h3>Connectez votre compte</h3>
+                    <p>Liaison securisee avec votre compte Airbnb en 2 clics. Synchronisation automatique de vos annonces, calendriers et historiques.</p>
+                </div>
             </div>
-            <div class="process-step">
-                <div class="step-number">2</div>
-                <h3>Configurez vos règles</h3>
-                <p>Prix minimum, réponses types, préférences. L'IA apprend de votre style.</p>
+            <div class="timeline-step reveal reveal-delay-1">
+                <div class="timeline-dot">2</div>
+                <div class="timeline-content">
+                    <h3>Definissez vos preferences</h3>
+                    <p>Prix minimum, style de communication, regles d'acceptation. L'IA s'adapte a votre facon de travailler et apprend de vos habitudes.</p>
+                </div>
             </div>
-            <div class="process-step">
-                <div class="step-number">3</div>
-                <h3>L'IA prend le relais</h3>
-                <p>Réponses auto, pricing dynamique, gestion des avis. Vous surveillez.</p>
+            <div class="timeline-step reveal reveal-delay-2">
+                <div class="timeline-dot">3</div>
+                <div class="timeline-content">
+                    <h3>L'IA prend le relais</h3>
+                    <p>Reponses automatiques, optimisation des prix, gestion proactive des avis. Vous gardez le controle total et validez les decisions importantes.</p>
+                </div>
             </div>
-            <div class="process-step">
-                <div class="step-number">4</div>
-                <h3>Optimisez sans cesse</h3>
-                <p>Dashboard temps réel, rapports hebdo, ajustements automatiques.</p>
+            <div class="timeline-step reveal reveal-delay-3">
+                <div class="timeline-dot">4</div>
+                <div class="timeline-content">
+                    <h3>Regardez vos revenus grandir</h3>
+                    <p>Dashboard temps reel, alertes intelligentes, rapports de performance. L'IA s'ameliore en continu et optimise sans cesse vos resultats.</p>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Testimonials Section -->
+    <!-- Testimonials -->
     <section class="testimonials" id="testimonials">
-        <div class="section-header">
-            <div class="section-tag">💬 Témoignages</div>
-            <h2>Ce qu'en disent nos clients</h2>
-            <p class="section-subtitle">Des propriétaires et conciergeries qui ont transformé leur gestion</p>
+        <div class="section-header reveal">
+            <div class="section-tag">Temoignages</div>
+            <h2>Ils nous font confiance</h2>
+            <p class="section-subtitle">Des proprietaires et conciergeries qui ont transforme leur gestion</p>
         </div>
-        <div class="testimonials-grid">
-            <div class="testimonial">
-                <p class="testimonial-text">"On a gagné 15h par semaine sur la gestion des messages. L'IA répond mieux que nous et nos clients sont plus satisfaits. Un game changer."</p>
+        <div class="testimonials-track">
+            <div class="testimonial-card reveal">
+                <div class="testimonial-quote">&ldquo;</div>
+                <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p class="testimonial-text">On a gagne 15h par semaine sur la gestion des messages. L'IA repond mieux que nous et nos voyageurs sont plus satisfaits. Un vrai game changer pour notre conciergerie.</p>
                 <div class="testimonial-author">
                     <div class="author-avatar">ML</div>
                     <div>
                         <div class="author-name">Marie L.</div>
-                        <div class="author-role">Conciergerie à Lyon • 12 biens</div>
+                        <div class="author-role">Conciergerie a Lyon &bull; 12 biens</div>
                     </div>
                 </div>
             </div>
-            <div class="testimonial">
-                <p class="testimonial-text">"Le pricing dynamique nous a fait gagner 30% de revenus dès le premier mois. L'agent ajuste les prix mieux que nous ne le faisions."</p>
+            <div class="testimonial-card reveal reveal-delay-1">
+                <div class="testimonial-quote">&ldquo;</div>
+                <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p class="testimonial-text">Le pricing dynamique nous a fait gagner 30% de revenus des le premier mois. L'algorithme ajuste les prix bien mieux que ce que nous faisions manuellement.</p>
                 <div class="testimonial-author">
                     <div class="author-avatar">TD</div>
                     <div>
                         <div class="author-name">Thomas D.</div>
-                        <div class="author-role">Propriétaire à Bordeaux • 5 biens</div>
+                        <div class="author-role">Proprietaire a Bordeaux &bull; 5 biens</div>
                     </div>
                 </div>
             </div>
-            <div class="testimonial">
-                <p class="testimonial-text">"Enfin un outil qui comprend vraiment la gestion Airbnb. Le scoring client nous a évité plusieurs problèmes avec des voyageurs difficiles."</p>
+            <div class="testimonial-card reveal reveal-delay-2">
+                <div class="testimonial-quote">&ldquo;</div>
+                <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p class="testimonial-text">Enfin un outil qui comprend vraiment la gestion Airbnb. Le scoring voyageur nous a evite plusieurs problemes. L'investissement est rentabilise en quelques jours.</p>
                 <div class="testimonial-author">
                     <div class="author-avatar">SM</div>
                     <div>
                         <div class="author-name">Sophie M.</div>
-                        <div class="author-role">Conciergerie à Marseille • 8 biens</div>
+                        <div class="author-role">Conciergerie a Marseille &bull; 8 biens</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card reveal reveal-delay-3">
+                <div class="testimonial-quote">&ldquo;</div>
+                <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p class="testimonial-text">Je gere 3 appartements a Paris a distance depuis Berlin. Avant cet outil c'etait impossible. Maintenant tout tourne en automatique, je ne fais que valider.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">JR</div>
+                    <div>
+                        <div class="author-name">Julien R.</div>
+                        <div class="author-role">Proprietaire a Paris &bull; 3 biens</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Pricing Section -->
+    <!-- Pricing -->
     <section class="pricing" id="pricing">
-        <div class="section-header">
-            <div class="section-tag">💎 Tarifs</div>
-            <h2>Des prix simples et transparents</h2>
-            <p class="section-subtitle">Commencez gratuitement, évoluez selon vos besoins</p>
+        <div class="section-header reveal">
+            <div class="section-tag">Tarifs</div>
+            <h2>Simple. Transparent. Sans surprise.</h2>
+            <p class="section-subtitle">Commencez gratuitement, evoluez selon vos besoins</p>
+        </div>
+        <div class="pricing-toggle reveal">
+            <span class="pricing-toggle-label active" id="monthlyLabel">Mensuel</span>
+            <div class="toggle-switch" id="pricingToggle"></div>
+            <span class="pricing-toggle-label" id="annualLabel">Annuel</span>
+            <span class="pricing-save">-20%</span>
         </div>
         <div class="pricing-grid">
-            <div class="pricing-card">
+            <div class="pricing-card reveal">
                 <div class="pricing-header">
                     <div class="pricing-name">Starter</div>
-                    <div class="pricing-price">0€<span>/mois</span></div>
+                    <div class="pricing-price">0&euro;<span>/mois</span></div>
                     <div class="pricing-desc">Pour tester sans risque</div>
                 </div>
                 <ul class="pricing-features">
-                    <li>1 bien géré</li>
-                    <li>Réponses automatiques</li>
-                    <li>Analytics basiques</li>
-                    <li>Support email</li>
+                    <li><span class="check">&#10003;</span> 1 bien gere</li>
+                    <li><span class="check">&#10003;</span> Reponses automatiques</li>
+                    <li><span class="check">&#10003;</span> Analytics basiques</li>
+                    <li><span class="check">&#10003;</span> Support email</li>
                 </ul>
-                <a href="#" class="btn btn-secondary" style="display: block;">Commencer gratuitement</a>
+                <a href="#" class="btn btn-secondary pricing-btn">Commencer gratuitement</a>
             </div>
-            <div class="pricing-card featured">
+            <div class="pricing-card featured reveal reveal-delay-1">
+                <div class="pricing-popular">Le plus populaire</div>
                 <div class="pricing-header">
                     <div class="pricing-name">Pro</div>
-                    <div class="pricing-price">49€<span>/mois</span></div>
-                    <div class="pricing-desc">Par bien • Sans engagement</div>
+                    <div class="pricing-price"><span class="price-value">49</span>&euro;<span>/mois</span></div>
+                    <div class="pricing-desc">Par bien &bull; Sans engagement</div>
                 </div>
                 <ul class="pricing-features">
-                    <li>Toutes les fonctionnalités</li>
-                    <li>Pricing dynamique avancé</li>
-                    <li>Scoring clients</li>
-                    <li>Support prioritaire 24/7</li>
-                    <li>API access</li>
+                    <li><span class="check">&#10003;</span> Toutes les fonctionnalites</li>
+                    <li><span class="check">&#10003;</span> Pricing dynamique avance</li>
+                    <li><span class="check">&#10003;</span> Scoring voyageurs</li>
+                    <li><span class="check">&#10003;</span> Support prioritaire 24/7</li>
+                    <li><span class="check">&#10003;</span> API access</li>
                 </ul>
-                <a href="#" class="btn btn-primary" style="display: block;">Essayer 14 jours gratuit</a>
+                <a href="#" class="btn btn-gradient pricing-btn">Essayer 14 jours gratuit</a>
             </div>
-            <div class="pricing-card">
+            <div class="pricing-card reveal reveal-delay-2">
                 <div class="pricing-header">
                     <div class="pricing-name">Conciergerie</div>
                     <div class="pricing-price">Sur mesure</div>
                     <div class="pricing-desc">10+ biens</div>
                 </div>
                 <ul class="pricing-features">
-                    <li>Volume discount</li>
-                    <li>Onboarding personnalisé</li>
-                    <li>Account manager dédié</li>
-                    <li>Formation équipe</li>
-                    <li>SLA garanti</li>
+                    <li><span class="check">&#10003;</span> Volume discount</li>
+                    <li><span class="check">&#10003;</span> Onboarding personnalise</li>
+                    <li><span class="check">&#10003;</span> Account manager dedie</li>
+                    <li><span class="check">&#10003;</span> Formation equipe</li>
+                    <li><span class="check">&#10003;</span> SLA garanti</li>
                 </ul>
-                <a href="#" class="btn btn-secondary" style="display: block;">Nous contacter</a>
+                <a href="#" class="btn btn-secondary pricing-btn">Nous contacter</a>
             </div>
         </div>
     </section>
 
-    <!-- FAQ Section -->
+    <!-- FAQ -->
     <section class="faq" id="faq">
-        <div class="section-header">
-            <div class="section-tag">❓ FAQ</div>
-            <h2>Questions fréquentes</h2>
+        <div class="section-header reveal">
+            <div class="section-tag">FAQ</div>
+            <h2>Questions frequentes</h2>
             <p class="section-subtitle">Tout ce que vous devez savoir avant de commencer</p>
         </div>
         <div class="faq-list">
-            <div class="faq-item">
-                <div class="faq-question">
-                    <span>Comment l'IA répond aux messages ?</span>
-                    <span>+</span>
+            <div class="faq-item reveal">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Comment l'IA repond-elle aux messages ?</span>
+                    <span class="faq-arrow">+</span>
                 </div>
                 <div class="faq-answer">
-                    L'IA analyse le contexte de la conversation, l'historique du voyageur et vos préférences pour générer une réponse personnalisée en quelques secondes. Elle apprend de vos corrections pour s'améliorer continuellement.
+                    <div class="faq-answer-inner">L'IA analyse le contexte de la conversation, l'historique du voyageur et vos preferences pour generer une reponse personnalisee en quelques secondes. Elle apprend de vos corrections pour s'ameliorer continuellement.</div>
                 </div>
             </div>
-            <div class="faq-item">
-                <div class="faq-question">
-                    <span>Mes données sont-elles sécurisées ?</span>
-                    <span>+</span>
+            <div class="faq-item reveal reveal-delay-1">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Mes donnees sont-elles securisees ?</span>
+                    <span class="faq-arrow">+</span>
                 </div>
                 <div class="faq-answer">
-                    Absolument. Nous utilisons un chiffrement de bout en bout, sommes conformes RGPD et ne stockons aucune donnée bancaire. Vos conversations restent privées et ne servent jamais à entraîner des modèles.
+                    <div class="faq-answer-inner">Absolument. Nous utilisons un chiffrement de bout en bout, sommes conformes RGPD et ne stockons aucune donnee bancaire. Vos conversations restent privees et ne servent jamais a entrainer des modeles.</div>
                 </div>
             </div>
-            <div class="faq-item">
-                <div class="faq-question">
-                    <span>Puis-je garder le contrôle ?</span>
-                    <span>+</span>
+            <div class="faq-item reveal reveal-delay-2">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Puis-je garder le controle ?</span>
+                    <span class="faq-arrow">+</span>
                 </div>
                 <div class="faq-answer">
-                    Bien sûr ! Vous définissez les règles et validez les actions importantes. L'IA fait des suggestions mais vous gardez le contrôle final sur les prix, les réservations et les réponses.
+                    <div class="faq-answer-inner">Bien sur ! Vous definissez les regles et validez les actions importantes. L'IA fait des suggestions mais vous gardez le controle final sur les prix, les reservations et les reponses.</div>
                 </div>
             </div>
-            <div class="faq-item">
-                <div class="faq-question">
+            <div class="faq-item reveal reveal-delay-3">
+                <div class="faq-question" onclick="toggleFaq(this)">
                     <span>Comment annuler mon abonnement ?</span>
-                    <span>+</span>
+                    <span class="faq-arrow">+</span>
                 </div>
                 <div class="faq-answer">
-                    Vous pouvez annuler à tout moment depuis votre dashboard. Pas de frais cachés, pas d'engagement. Vos données vous appartiennent et peuvent être exportées à tout moment.
+                    <div class="faq-answer-inner">Vous pouvez annuler a tout moment depuis votre dashboard. Pas de frais caches, pas d'engagement. Vos donnees vous appartiennent et peuvent etre exportees a tout moment.</div>
+                </div>
+            </div>
+            <div class="faq-item reveal reveal-delay-4">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Combien de temps pour voir des resultats ?</span>
+                    <span class="faq-arrow">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">Les reponses automatiques sont actives immediatement. L'optimisation des prix montre des resultats en 1 a 2 semaines. La plupart de nos utilisateurs constatent une augmentation de 20 a 30% de revenus des le premier mois.</div>
                 </div>
             </div>
         </div>
@@ -859,15 +1812,152 @@
 
     <!-- CTA Section -->
     <section class="cta-section">
-        <h2>Prêt à automatiser<br>votre conciergerie ?</h2>
-        <p>Rejoignez les propriétaires qui gagnent du temps et de l'argent avec l'IA</p>
-        <a href="#pricing" class="btn btn-primary" style="font-size: 18px; padding: 18px 36px;">🚀 Essayer gratuitement (14 jours)</a>
-        <p style="margin-top: 20px; font-size: 14px; color: var(--text-muted);">Sans engagement • Annulation à tout moment • Support 24/7</p>
+        <h2 class="reveal">Pret a automatiser<br>votre conciergerie ?</h2>
+        <p class="reveal reveal-delay-1">Rejoignez 2 800+ hotes qui gagnent du temps et de l'argent avec l'IA</p>
+        <a href="#pricing" class="btn btn-gradient reveal reveal-delay-2">Essayer gratuitement &mdash; 14 jours</a>
+        <div class="cta-trust reveal reveal-delay-3">
+            <span>&#10003; Sans engagement</span>
+            <span>&#10003; Sans carte bancaire</span>
+            <span>&#10003; Support 24/7</span>
+        </div>
     </section>
 
     <!-- Footer -->
     <footer>
-        <p>© 2026 Airbnb AI Manager. Tous droits réservés.</p>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="nav-logo" style="margin-bottom: 16px;">
+                    <div class="nav-logo-icon">A</div>
+                    Airbnb AI
+                </div>
+                <p>L'intelligence artificielle au service de votre conciergerie. Automatisez, optimisez, developpez.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Produit</h4>
+                <a href="#features">Fonctionnalites</a>
+                <a href="#pricing">Tarifs</a>
+                <a href="#faq">FAQ</a>
+                <a href="#">Changelog</a>
+            </div>
+            <div class="footer-col">
+                <h4>Ressources</h4>
+                <a href="#">Documentation</a>
+                <a href="#">Blog</a>
+                <a href="#">Guides</a>
+                <a href="#">API</a>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <a href="#">Confidentialite</a>
+                <a href="#">CGU</a>
+                <a href="#">RGPD</a>
+                <a href="#">Mentions legales</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>&copy; 2026 Airbnb AI Manager. Tous droits reserves.</span>
+            <div class="footer-social">
+                <a href="#" aria-label="Twitter">X</a>
+                <a href="#" aria-label="LinkedIn">in</a>
+                <a href="#" aria-label="GitHub">GH</a>
+            </div>
+        </div>
     </footer>
+
+    <script>
+        // Scroll reveal with Intersection Observer
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // Animated counter
+        function animateCounters() {
+            const counters = document.querySelectorAll('[data-count]');
+            counters.forEach(counter => {
+                if (counter.dataset.animated) return;
+                const rect = counter.getBoundingClientRect();
+                if (rect.top > window.innerHeight) return;
+
+                counter.dataset.animated = 'true';
+                const target = parseInt(counter.dataset.count);
+                const prefix = counter.dataset.prefix || '';
+                const suffix = counter.dataset.suffix || '';
+                const duration = 2000;
+                const start = performance.now();
+
+                function update(now) {
+                    const elapsed = now - start;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    const current = Math.floor(eased * target);
+                    counter.textContent = prefix + current.toLocaleString('fr-FR') + suffix;
+                    if (progress < 1) requestAnimationFrame(update);
+                }
+                requestAnimationFrame(update);
+            });
+        }
+
+        window.addEventListener('scroll', animateCounters);
+        animateCounters();
+
+        // Generate chart bars
+        const chart = document.getElementById('mockupChart');
+        if (chart) {
+            const heights = [35, 52, 44, 68, 55, 72, 60, 80, 65, 90, 75, 95];
+            heights.forEach((h, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                bar.style.height = '0%';
+                chart.appendChild(bar);
+                setTimeout(() => { bar.style.height = h + '%'; }, 300 + i * 100);
+            });
+        }
+
+        // FAQ accordion
+        function toggleFaq(el) {
+            const item = el.parentElement;
+            const wasOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+            if (!wasOpen) item.classList.add('open');
+        }
+
+        // Mobile menu
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.getElementById('navLinks').classList.toggle('open');
+        });
+
+        // Pricing toggle
+        const toggle = document.getElementById('pricingToggle');
+        const monthlyLabel = document.getElementById('monthlyLabel');
+        const annualLabel = document.getElementById('annualLabel');
+        const priceValue = document.querySelector('.price-value');
+
+        toggle.addEventListener('click', function() {
+            const isAnnual = this.classList.toggle('active');
+            monthlyLabel.classList.toggle('active', !isAnnual);
+            annualLabel.classList.toggle('active', isAnnual);
+            if (priceValue) priceValue.textContent = isAnnual ? '39' : '49';
+        });
+
+        // Nav background on scroll
+        const nav = document.querySelector('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                nav.style.background = 'rgba(6, 6, 11, 0.9)';
+                nav.style.borderColor = 'rgba(255,255,255,0.08)';
+            } else {
+                nav.style.background = 'rgba(12, 12, 20, 0.7)';
+                nav.style.borderColor = 'rgba(255,255,255,0.06)';
+            }
+        });
+    </script>
 </body>
 </html>
