@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Messages{% endblock %}
+{% block page_title %}Messages{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-secondary" onclick="processPending()">🚀 Envoyer en attente</button>
+<button class="btn btn-primary" onclick="openCreateTemplate()">+ Nouveau template</button>
+{% endblock %}
+
+{% block content %}
+<div class="content-grid-equal">
+    <!-- Templates -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Templates de messages</span>
+            <span class="card-action" id="templateCount">-</span>
+        </div>
+        <div id="templatesContainer">
+            <div class="loading"><div class="spinner"></div> Chargement...</div>
+        </div>
+    </div>
+
+    <!-- Logs -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Historique d'envoi</span>
+            <select class="form-select" id="logStatusFilter" style="width:auto;padding:6px 10px;font-size:12px" onchange="loadLogs()">
+                <option value="">Tous</option>
+                <option value="PENDING">En attente</option>
+                <option value="SENT">Envoyes</option>
+                <option value="FAILED">Echoues</option>
+            </select>
+        </div>
+        <div id="logsContainer">
+            <div class="loading"><div class="spinner"></div> Chargement...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Send Message Modal -->
+<div class="modal-overlay" id="sendModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Envoyer un message</span>
+            <button class="modal-close" onclick="closeModal('sendModal')">&times;</button>
+        </div>
+        <form onsubmit="sendMessage(event)">
+            <div class="form-group">
+                <label class="form-label">Reservation</label>
+                <select class="form-select" id="sendBookingId" required></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Template</label>
+                <select class="form-select" id="sendTemplateId" required></select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('sendModal')">Annuler</button>
+                <button type="submit" class="btn btn-primary">Envoyer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Template Modal -->
+<div class="modal-overlay" id="templateModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="templateModalTitle">Nouveau template</span>
+            <button class="modal-close" onclick="closeModal('templateModal')">&times;</button>
+        </div>
+        <form id="templateForm" onsubmit="saveTemplate(event)">
+            <input type="hidden" id="templateId">
+            <div class="form-group">
+                <label class="form-label">Nom</label>
+                <input class="form-input" id="templateName" required placeholder="Message de bienvenue">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Declencheur</label>
+                    <select class="form-select" id="templateTrigger" required>
+                        <option value="BOOKING_CONFIRMED">Reservation confirmee</option>
+                        <option value="CHECK_IN_REMINDER">Rappel check-in</option>
+                        <option value="DAY_OF_CHECK_IN">Jour du check-in</option>
+                        <option value="MID_STAY">Mi-sejour</option>
+                        <option value="CHECK_OUT_REMINDER">Rappel check-out</option>
+                        <option value="POST_CHECKOUT">Apres check-out</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Delai (heures)</label>
+                    <input class="form-input" id="templateOffset" type="number" value="0" placeholder="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Sujet</label>
+                <input class="form-input" id="templateSubject" placeholder="Bienvenue chez nous !">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Corps du message (Jinja2)</label>
+                <textarea class="form-textarea" id="templateBody" required style="min-height:160px"
+                    placeholder="Bonjour {{ guest_name }},&#10;&#10;Merci pour votre reservation..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('templateModal')">Annuler</button>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let editingTemplateId = null;
+
+    async function loadTemplates() {
+        try {
+            const templates = await apiCall('/messaging/templates');
+            const container = document.getElementById('templatesContainer');
+            document.getElementById('templateCount').textContent = `${templates.length} template(s)`;
+
+            if (templates.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💬</div>
+                        <div class="empty-state-text">Aucun template</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = templates.map(t => `
+                <div style="padding:14px; background:var(--darker); border-radius:8px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-weight:600; font-size:14px;">${t.name}</span>
+                        <span class="badge badge-info">${triggerLabel(t.trigger)}</span>
+                    </div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+                        ${t.subject || 'Sans sujet'} | Delai: ${t.send_offset_hours}h | ${t.is_active ? '✅ Actif' : '⏸ Inactif'}
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="editTemplate(${t.id})">Modifier</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteTemplate(${t.id})">Supprimer</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {}
+    }
+
+    async function loadLogs() {
+        try {
+            const status = document.getElementById('logStatusFilter').value;
+            const query = status ? `?status=${status}` : '';
+            const logs = await apiCall('/messaging/logs' + query);
+            const container = document.getElementById('logsContainer');
+
+            if (logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-text">Aucun message</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = logs.slice(0, 20).map(l => `
+                <div style="padding:12px; background:var(--darker); border-radius:8px; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:13px;">Reservation #${l.booking_id} - ${triggerLabel(l.trigger)}</span>
+                        <span class="badge ${logStatusBadge(l.status)}">${logStatusLabel(l.status)}</span>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+                        ${l.sent_at ? formatDateTime(l.sent_at) : (l.scheduled_at ? 'Planifie: ' + formatDateTime(l.scheduled_at) : '-')}
+                        ${l.error ? ' | Erreur: ' + l.error : ''}
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {}
+    }
+
+    function openCreateTemplate() {
+        editingTemplateId = null;
+        document.getElementById('templateModalTitle').textContent = 'Nouveau template';
+        document.getElementById('templateForm').reset();
+        openModal('templateModal');
+    }
+
+    async function saveTemplate(e) {
+        e.preventDefault();
+        const data = {
+            name: document.getElementById('templateName').value,
+            trigger: document.getElementById('templateTrigger').value,
+            subject: document.getElementById('templateSubject').value || null,
+            body: document.getElementById('templateBody').value,
+            send_offset_hours: parseInt(document.getElementById('templateOffset').value) || 0,
+            is_active: true,
+        };
+        try {
+            if (editingTemplateId) {
+                await apiCall(`/messaging/templates/${editingTemplateId}`, { method: 'PUT', body: JSON.stringify(data) });
+                showToast('Template mis a jour', 'success');
+            } else {
+                await apiCall('/messaging/templates', { method: 'POST', body: JSON.stringify(data) });
+                showToast('Template cree', 'success');
+            }
+            closeModal('templateModal');
+            loadTemplates();
+        } catch (e) {}
+    }
+
+    async function editTemplate(id) {
+        try {
+            const t = await apiCall(`/messaging/templates/${id}`);
+            editingTemplateId = id;
+            document.getElementById('templateModalTitle').textContent = 'Modifier le template';
+            document.getElementById('templateName').value = t.name;
+            document.getElementById('templateTrigger').value = t.trigger;
+            document.getElementById('templateSubject').value = t.subject || '';
+            document.getElementById('templateBody').value = t.body;
+            document.getElementById('templateOffset').value = t.send_offset_hours;
+            openModal('templateModal');
+        } catch (e) {}
+    }
+
+    async function deleteTemplate(id) {
+        if (!confirm('Supprimer ce template ?')) return;
+        try {
+            await apiCall(`/messaging/templates/${id}`, { method: 'DELETE' });
+            showToast('Template supprime', 'success');
+            loadTemplates();
+        } catch (e) {}
+    }
+
+    async function processPending() {
+        try {
+            const result = await apiCall('/messaging/process-pending', { method: 'POST' });
+            showToast(`${result.sent} message(s) envoye(s)`, 'success');
+            loadLogs();
+        } catch (e) {}
+    }
+
+    async function sendMessage(e) {
+        e.preventDefault();
+        try {
+            await apiCall('/messaging/send', {
+                method: 'POST',
+                body: JSON.stringify({
+                    booking_id: parseInt(document.getElementById('sendBookingId').value),
+                    template_id: parseInt(document.getElementById('sendTemplateId').value),
+                })
+            });
+            showToast('Message envoye', 'success');
+            closeModal('sendModal');
+            loadLogs();
+        } catch (e) {}
+    }
+
+    function triggerLabel(t) {
+        return {
+            BOOKING_CONFIRMED: 'Confirmation',
+            CHECK_IN_REMINDER: 'Rappel arrivee',
+            DAY_OF_CHECK_IN: 'Jour arrivee',
+            MID_STAY: 'Mi-sejour',
+            CHECK_OUT_REMINDER: 'Rappel depart',
+            POST_CHECKOUT: 'Post-depart'
+        }[t] || t;
+    }
+
+    function logStatusBadge(s) {
+        return { SENT: 'badge-success', PENDING: 'badge-warning', FAILED: 'badge-danger', SKIPPED: 'badge-muted' }[s] || 'badge-muted';
+    }
+
+    function logStatusLabel(s) {
+        return { SENT: 'Envoye', PENDING: 'En attente', FAILED: 'Echoue', SKIPPED: 'Ignore' }[s] || s;
+    }
+
+    loadTemplates();
+    loadLogs();
+</script>
+{% endblock %}

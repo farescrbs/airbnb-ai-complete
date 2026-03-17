@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Reservations{% endblock %}
+{% block page_title %}Reservations{% endblock %}
+
+{% block header_actions %}
+<select class="form-select" id="filterStatus" style="width:auto" onchange="loadBookings()">
+    <option value="">Tous les statuts</option>
+    <option value="PENDING">En attente</option>
+    <option value="CONFIRMED">Confirmee</option>
+    <option value="CANCELLED">Annulee</option>
+    <option value="COMPLETED">Terminee</option>
+</select>
+<button class="btn btn-primary" onclick="openCreateBooking()">+ Nouvelle reservation</button>
+{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Total reservations</span>
+            <div class="stat-icon blue">📋</div>
+        </div>
+        <div class="stat-value" id="totalBookings">--</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Confirmees</span>
+            <div class="stat-icon green">✅</div>
+        </div>
+        <div class="stat-value" id="confirmedBookings">--</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">En attente</span>
+            <div class="stat-icon orange">⏳</div>
+        </div>
+        <div class="stat-value" id="pendingBookings">--</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Revenu total</span>
+            <div class="stat-icon pink">💰</div>
+        </div>
+        <div class="stat-value" id="totalRevenue">--</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Liste des reservations</span>
+    </div>
+    <div id="bookingsContainer">
+        <div class="loading"><div class="spinner"></div> Chargement...</div>
+    </div>
+</div>
+
+<!-- Create Modal -->
+<div class="modal-overlay" id="bookingModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Nouvelle reservation</span>
+            <button class="modal-close" onclick="closeModal('bookingModal')">&times;</button>
+        </div>
+        <form id="bookingForm" onsubmit="saveBooking(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Propriete</label>
+                    <select class="form-select" id="bookingListing" required></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Plateforme</label>
+                    <select class="form-select" id="bookingPlatform">
+                        <option value="AIRBNB">Airbnb</option>
+                        <option value="VRBO">VRBO</option>
+                        <option value="BOOKINGCOM">Booking.com</option>
+                        <option value="DIRECT">Direct</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ID externe</label>
+                <input class="form-input" id="bookingExternalId" required placeholder="RES-12345">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nom du client</label>
+                    <input class="form-input" id="bookingGuestName" required placeholder="Jean Dupont">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-input" id="bookingGuestEmail" type="email" required placeholder="jean@mail.com">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Telephone</label>
+                    <input class="form-input" id="bookingGuestPhone" placeholder="+33 6 12 34 56 78">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nombre de voyageurs</label>
+                    <input class="form-input" id="bookingNumGuests" type="number" min="1" value="1">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Arrivee</label>
+                    <input class="form-input" id="bookingCheckIn" type="date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Depart</label>
+                    <input class="form-input" id="bookingCheckOut" type="date" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Tarif / nuit</label>
+                    <input class="form-input" id="bookingNightlyRate" type="number" step="0.01" placeholder="120.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Montant total</label>
+                    <input class="form-input" id="bookingTotalPrice" type="number" step="0.01" placeholder="480.00">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea class="form-textarea" id="bookingNotes" placeholder="Notes internes..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('bookingModal')">Annuler</button>
+                <button type="submit" class="btn btn-primary">Creer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="bookingDetailModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Detail de la reservation</span>
+            <button class="modal-close" onclick="closeModal('bookingDetailModal')">&times;</button>
+        </div>
+        <div id="bookingDetailContent"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function loadBookings() {
+        try {
+            const status = document.getElementById('filterStatus').value;
+            const query = status ? `?status=${status}` : '';
+            const bookings = await apiCall('/bookings/' + query);
+            const container = document.getElementById('bookingsContainer');
+
+            // Stats
+            const all = await apiCall('/bookings/');
+            document.getElementById('totalBookings').textContent = all.length;
+            document.getElementById('confirmedBookings').textContent = all.filter(b => b.status === 'CONFIRMED').length;
+            document.getElementById('pendingBookings').textContent = all.filter(b => b.status === 'PENDING').length;
+            document.getElementById('totalRevenue').textContent = formatCurrency(
+                all.reduce((s, b) => s + (b.total_price || 0), 0)
+            );
+
+            if (bookings.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">Aucune reservation</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Propriete</th>
+                                <th>Arrivee</th>
+                                <th>Depart</th>
+                                <th>Voyageurs</th>
+                                <th>Statut</th>
+                                <th>Montant</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${bookings.map(b => `
+                                <tr style="cursor:pointer" onclick="viewBooking(${b.id})">
+                                    <td style="font-weight:600">${b.guest_name}</td>
+                                    <td>${b.listing_id}</td>
+                                    <td>${formatDate(b.check_in)}</td>
+                                    <td>${formatDate(b.check_out)}</td>
+                                    <td>${b.num_guests}</td>
+                                    <td><span class="badge ${statusBadge(b.status)}">${statusLabel(b.status)}</span></td>
+                                    <td>${formatCurrency(b.total_price)}</td>
+                                    <td>
+                                        ${b.status === 'PENDING' ? `
+                                            <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); updateBookingStatus(${b.id}, 'CONFIRMED')">Confirmer</button>
+                                        ` : ''}
+                                        ${b.status !== 'CANCELLED' && b.status !== 'COMPLETED' ? `
+                                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); updateBookingStatus(${b.id}, 'CANCELLED')">Annuler</button>
+                                        ` : ''}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        } catch (e) {}
+    }
+
+    async function openCreateBooking() {
+        // Load listings for selector
+        try {
+            const listings = await apiCall('/listings/');
+            const select = document.getElementById('bookingListing');
+            select.innerHTML = listings.map(l =>
+                `<option value="${l.id}">${l.name}</option>`
+            ).join('');
+        } catch (e) {}
+        document.getElementById('bookingForm').reset();
+        openModal('bookingModal');
+    }
+
+    async function saveBooking(e) {
+        e.preventDefault();
+        const data = {
+            listing_id: parseInt(document.getElementById('bookingListing').value),
+            external_id: document.getElementById('bookingExternalId').value,
+            platform: document.getElementById('bookingPlatform').value,
+            status: 'PENDING',
+            guest_name: document.getElementById('bookingGuestName').value,
+            guest_email: document.getElementById('bookingGuestEmail').value,
+            guest_phone: document.getElementById('bookingGuestPhone').value || null,
+            num_guests: parseInt(document.getElementById('bookingNumGuests').value),
+            check_in: document.getElementById('bookingCheckIn').value,
+            check_out: document.getElementById('bookingCheckOut').value,
+            nightly_rate: parseFloat(document.getElementById('bookingNightlyRate').value) || null,
+            total_price: parseFloat(document.getElementById('bookingTotalPrice').value) || null,
+            notes: document.getElementById('bookingNotes').value || null,
+        };
+        try {
+            await apiCall('/bookings/', { method: 'POST', body: JSON.stringify(data) });
+            showToast('Reservation creee', 'success');
+            closeModal('bookingModal');
+            loadBookings();
+        } catch (e) {}
+    }
+
+    async function updateBookingStatus(id, status) {
+        try {
+            await apiCall(`/bookings/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
+            showToast(`Reservation ${status === 'CONFIRMED' ? 'confirmee' : 'annulee'}`, 'success');
+            loadBookings();
+        } catch (e) {}
+    }
+
+    async function viewBooking(id) {
+        try {
+            const b = await apiCall(`/bookings/${id}`);
+            document.getElementById('bookingDetailContent').innerHTML = `
+                <div style="display:grid; gap:16px;">
+                    <div class="form-row">
+                        <div><span class="form-label">Client</span><div style="font-weight:600">${b.guest_name}</div></div>
+                        <div><span class="form-label">Email</span><div>${b.guest_email}</div></div>
+                    </div>
+                    <div class="form-row">
+                        <div><span class="form-label">Telephone</span><div>${b.guest_phone || '-'}</div></div>
+                        <div><span class="form-label">Voyageurs</span><div>${b.num_guests}</div></div>
+                    </div>
+                    <div class="form-row">
+                        <div><span class="form-label">Arrivee</span><div>${formatDate(b.check_in)}</div></div>
+                        <div><span class="form-label">Depart</span><div>${formatDate(b.check_out)}</div></div>
+                    </div>
+                    <div class="form-row">
+                        <div><span class="form-label">Statut</span><div><span class="badge ${statusBadge(b.status)}">${statusLabel(b.status)}</span></div></div>
+                        <div><span class="form-label">Montant total</span><div style="font-weight:700">${formatCurrency(b.total_price)}</div></div>
+                    </div>
+                    ${b.access_code ? `<div><span class="form-label">Code d'acces</span><div style="font-family:monospace; font-size:18px; font-weight:700; color:var(--primary)">${b.access_code}</div></div>` : ''}
+                    ${b.notes ? `<div><span class="form-label">Notes</span><div style="color:var(--text-muted)">${b.notes}</div></div>` : ''}
+                </div>
+            `;
+            openModal('bookingDetailModal');
+        } catch (e) {}
+    }
+
+    function statusBadge(s) {
+        return { CONFIRMED: 'badge-success', PENDING: 'badge-warning', CANCELLED: 'badge-danger', COMPLETED: 'badge-info' }[s] || 'badge-muted';
+    }
+
+    function statusLabel(s) {
+        return { CONFIRMED: 'Confirmee', PENDING: 'En attente', CANCELLED: 'Annulee', COMPLETED: 'Terminee' }[s] || s;
+    }
+
+    loadBookings();
+</script>
+{% endblock %}

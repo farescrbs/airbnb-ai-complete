@@ -80,27 +80,27 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/ui/listings")
 def ui_listings(request: Request):
-    return templates.TemplateResponse("listings.html", {"request": request})
+    return templates.TemplateResponse("listings.html", {"request": request, "active_page": "listings"})
 
 @app.get("/ui/bookings")
 def ui_bookings(request: Request):
-    return templates.TemplateResponse("bookings.html", {"request": request})
+    return templates.TemplateResponse("bookings.html", {"request": request, "active_page": "bookings"})
 
 @app.get("/ui/messaging")
 def ui_messaging(request: Request):
-    return templates.TemplateResponse("messaging.html", {"request": request})
+    return templates.TemplateResponse("messaging.html", {"request": request, "active_page": "messaging"})
 
 @app.get("/ui/pricing")
 def ui_pricing(request: Request):
-    return templates.TemplateResponse("pricing.html", {"request": request})
+    return templates.TemplateResponse("pricing.html", {"request": request, "active_page": "pricing"})
 
 @app.get("/ui/calendar")
 def ui_calendar(request: Request):
-    return templates.TemplateResponse("calendar.html", {"request": request})
+    return templates.TemplateResponse("calendar.html", {"request": request, "active_page": "calendar"})
 
 @app.get("/ui/operations")
 def ui_operations(request: Request):
-    return templates.TemplateResponse("operations.html", {"request": request})
+    return templates.TemplateResponse("operations.html", {"request": request, "active_page": "operations"})
 
 # Register routers
 app.include_router(listings.router)
@@ -113,7 +113,7 @@ app.include_router(operations.router)
 
 @app.get("/", tags=["UI"])
 def root(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse("dashboard.html", {"request": request, "active_page": "dashboard"})
 
 
 @app.get("/health", tags=["Health"])

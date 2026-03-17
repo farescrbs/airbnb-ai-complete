@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Pricing{% endblock %}
+{% block page_title %}Pricing dynamique{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-secondary" onclick="runPriceUpdate()">🔄 Recalculer les prix</button>
+<button class="btn btn-primary" onclick="openCreateRule()">+ Nouvelle regle</button>
+{% endblock %}
+
+{% block content %}
+<!-- Price Calculator -->
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-header">
+        <span class="card-title">Calculateur de prix</span>
+    </div>
+    <div style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
+        <div class="form-group" style="margin:0; flex:1; min-width:200px;">
+            <label class="form-label">Propriete</label>
+            <select class="form-select" id="calcListing"></select>
+        </div>
+        <div class="form-group" style="margin:0;">
+            <label class="form-label">Date</label>
+            <input class="form-input" id="calcDate" type="date">
+        </div>
+        <button class="btn btn-primary" onclick="calculatePrice()">Calculer</button>
+        <div id="calcResult" style="display:none; padding:12px 20px; background:var(--darker); border-radius:8px;">
+            <div style="font-size:12px; color:var(--text-muted);">Prix calcule</div>
+            <div style="font-size:24px; font-weight:800;" id="calcPrice">-</div>
+            <div style="font-size:11px; color:var(--text-muted);" id="calcDetails">-</div>
+        </div>
+    </div>
+</div>
+
+<!-- Rules -->
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Regles de pricing</span>
+        <span class="card-action" id="ruleCount">-</span>
+    </div>
+    <div id="rulesContainer">
+        <div class="loading"><div class="spinner"></div> Chargement...</div>
+    </div>
+</div>
+
+<!-- Rule Modal -->
+<div class="modal-overlay" id="ruleModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="ruleModalTitle">Nouvelle regle</span>
+            <button class="modal-close" onclick="closeModal('ruleModal')">&times;</button>
+        </div>
+        <form id="ruleForm" onsubmit="saveRule(event)">
+            <input type="hidden" id="ruleId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Propriete</label>
+                    <select class="form-select" id="ruleListing" required></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom</label>
+                    <input class="form-input" id="ruleName" required placeholder="Regle haute saison">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Strategie</label>
+                <select class="form-select" id="ruleStrategy">
+                    <option value="FLAT">Fixe</option>
+                    <option value="OCCUPANCY_BASED">Basee sur l'occupation</option>
+                    <option value="SEASONAL">Saisonniere</option>
+                    <option value="DEMAND_BASED">Basee sur la demande</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Seuil occupation basse</label>
+                    <input class="form-input" id="ruleLowThreshold" type="number" step="0.01" value="0.3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Seuil occupation haute</label>
+                    <input class="form-input" id="ruleHighThreshold" type="number" step="0.01" value="0.7">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Multiplicateur bas</label>
+                    <input class="form-input" id="ruleLowMult" type="number" step="0.01" value="0.85">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Multiplicateur haut</label>
+                    <input class="form-input" id="ruleHighMult" type="number" step="0.01" value="1.20">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Multiplicateur demande</label>
+                <input class="form-input" id="ruleDemandMult" type="number" step="0.01" value="1.0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Config saisonniere (JSON)</label>
+                <textarea class="form-textarea" id="ruleSeasonalConfig" placeholder='{"summer": 1.3, "winter": 0.9}'></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('ruleModal')">Annuler</button>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let editingRuleId = null;
+
+    async function loadListingSelects() {
+        try {
+            const listings = await apiCall('/listings/');
+            const opts = listings.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+            document.getElementById('calcListing').innerHTML = opts;
+            document.getElementById('ruleListing').innerHTML = opts;
+        } catch (e) {}
+    }
+
+    async function loadRules() {
+        try {
+            const rules = await apiCall('/pricing/rules');
+            const container = document.getElementById('rulesContainer');
+            document.getElementById('ruleCount').textContent = `${rules.length} regle(s)`;
+
+            if (rules.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💰</div>
+                        <div class="empty-state-text">Aucune regle de pricing</div>
+                        <div class="empty-state-sub">Creez des regles pour ajuster vos prix automatiquement</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Propriete</th>
+                                <th>Strategie</th>
+                                <th>Multiplicateurs</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rules.map(r => `
+                                <tr>
+                                    <td style="font-weight:600">${r.name}</td>
+                                    <td>${r.listing_id}</td>
+                                    <td><span class="badge badge-info">${strategyLabel(r.strategy)}</span></td>
+                                    <td>${r.low_multiplier}x - ${r.high_multiplier}x</td>
+                                    <td><span class="badge ${r.is_active ? 'badge-success' : 'badge-muted'}">${r.is_active ? 'Actif' : 'Inactif'}</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-sm" onclick="editRule(${r.id})">Modifier</button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteRule(${r.id})">Supprimer</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        } catch (e) {}
+    }
+
+    async function calculatePrice() {
+        const listingId = document.getElementById('calcListing').value;
+        const date = document.getElementById('calcDate').value;
+        if (!listingId) return;
+        try {
+            const query = date ? `?listing_id=${listingId}&target_date=${date}` : `?listing_id=${listingId}`;
+            const result = await apiCall('/pricing/calculate' + query);
+            document.getElementById('calcResult').style.display = 'block';
+            document.getElementById('calcPrice').textContent = formatCurrency(result.calculated_price);
+            document.getElementById('calcDetails').textContent =
+                `Base: ${formatCurrency(result.base_price)} | Strategie: ${strategyLabel(result.strategy_applied)} | Mult: ${result.multiplier}x`;
+        } catch (e) {}
+    }
+
+    function openCreateRule() {
+        editingRuleId = null;
+        document.getElementById('ruleModalTitle').textContent = 'Nouvelle regle';
+        document.getElementById('ruleForm').reset();
+        openModal('ruleModal');
+    }
+
+    async function saveRule(e) {
+        e.preventDefault();
+        const data = {
+            listing_id: parseInt(document.getElementById('ruleListing').value),
+            name: document.getElementById('ruleName').value,
+            strategy: document.getElementById('ruleStrategy').value,
+            is_active: true,
+            low_occupancy_threshold: parseFloat(document.getElementById('ruleLowThreshold').value),
+            high_occupancy_threshold: parseFloat(document.getElementById('ruleHighThreshold').value),
+            low_multiplier: parseFloat(document.getElementById('ruleLowMult').value),
+            high_multiplier: parseFloat(document.getElementById('ruleHighMult').value),
+            demand_multiplier: parseFloat(document.getElementById('ruleDemandMult').value),
+            seasonal_config: document.getElementById('ruleSeasonalConfig').value || null,
+        };
+        try {
+            if (editingRuleId) {
+                await apiCall(`/pricing/rules/${editingRuleId}`, { method: 'PUT', body: JSON.stringify(data) });
+                showToast('Regle mise a jour', 'success');
+            } else {
+                await apiCall('/pricing/rules', { method: 'POST', body: JSON.stringify(data) });
+                showToast('Regle creee', 'success');
+            }
+            closeModal('ruleModal');
+            loadRules();
+        } catch (e) {}
+    }
+
+    async function editRule(id) {
+        try {
+            const r = await apiCall(`/pricing/rules/${id}`);
+            editingRuleId = id;
+            document.getElementById('ruleModalTitle').textContent = 'Modifier la regle';
+            document.getElementById('ruleListing').value = r.listing_id;
+            document.getElementById('ruleName').value = r.name;
+            document.getElementById('ruleStrategy').value = r.strategy;
+            document.getElementById('ruleLowThreshold').value = r.low_occupancy_threshold;
+            document.getElementById('ruleHighThreshold').value = r.high_occupancy_threshold;
+            document.getElementById('ruleLowMult').value = r.low_multiplier;
+            document.getElementById('ruleHighMult').value = r.high_multiplier;
+            document.getElementById('ruleDemandMult').value = r.demand_multiplier;
+            document.getElementById('ruleSeasonalConfig').value = r.seasonal_config || '';
+            openModal('ruleModal');
+        } catch (e) {}
+    }
+
+    async function deleteRule(id) {
+        if (!confirm('Supprimer cette regle ?')) return;
+        try {
+            await apiCall(`/pricing/rules/${id}`, { method: 'DELETE' });
+            showToast('Regle supprimee', 'success');
+            loadRules();
+        } catch (e) {}
+    }
+
+    async function runPriceUpdate() {
+        try {
+            const result = await apiCall('/pricing/run-update', { method: 'POST' });
+            showToast(`${result.price_points_updated} prix mis a jour`, 'success');
+        } catch (e) {}
+    }
+
+    function strategyLabel(s) {
+        return { FLAT: 'Fixe', OCCUPANCY_BASED: 'Occupation', SEASONAL: 'Saisonnier', DEMAND_BASED: 'Demande' }[s] || s;
+    }
+
+    loadListingSelects();
+    loadRules();
+</script>
+{% endblock %}

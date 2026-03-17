@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-secondary" onclick="loadDashboard()">🔄 Actualiser</button>
+{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Revenus ce mois</span>
+            <div class="stat-icon blue">💰</div>
+        </div>
+        <div class="stat-value" id="statRevenue">--</div>
+        <div class="stat-change" id="statRevenueChange">Chargement...</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Reservations actives</span>
+            <div class="stat-icon green">📋</div>
+        </div>
+        <div class="stat-value" id="statBookings">--</div>
+        <div class="stat-change positive" id="statBookingsDetail">-</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Messages envoyes</span>
+            <div class="stat-icon orange">💬</div>
+        </div>
+        <div class="stat-value" id="statMessages">--</div>
+        <div class="stat-change">Aujourd'hui</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Proprietes</span>
+            <div class="stat-icon pink">🏡</div>
+        </div>
+        <div class="stat-value" id="statListings">--</div>
+        <div class="stat-change" id="statListingsDetail">-</div>
+    </div>
+</div>
+
+<!-- Content Grid -->
+<div class="content-grid">
+    <!-- Upcoming Check-ins & Check-outs -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Reservations recentes</span>
+            <a class="card-action" href="/ui/bookings">Voir tout →</a>
+        </div>
+        <div id="recentBookings">
+            <div class="loading"><div class="spinner"></div> Chargement...</div>
+        </div>
+    </div>
+
+    <!-- Activity / Quick Stats -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Actions rapides</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--darker); border-radius: 8px;">
+                <div>
+                    <div style="font-size: 14px; font-weight: 600;">Check-ins aujourd'hui</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Arrivees du jour</div>
+                </div>
+                <div style="font-size: 24px; font-weight: 800;" id="quickCheckins">0</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--darker); border-radius: 8px;">
+                <div>
+                    <div style="font-size: 14px; font-weight: 600;">Check-outs aujourd'hui</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Departs du jour</div>
+                </div>
+                <div style="font-size: 24px; font-weight: 800;" id="quickCheckouts">0</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--darker); border-radius: 8px;">
+                <div>
+                    <div style="font-size: 14px; font-weight: 600;">Avis en attente</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">A publier</div>
+                </div>
+                <div style="font-size: 24px; font-weight: 800;" id="quickReviews">0</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--darker); border-radius: 8px;">
+                <div>
+                    <div style="font-size: 14px; font-weight: 600;">Menages planifies</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">A effectuer</div>
+                </div>
+                <div style="font-size: 24px; font-weight: 800;" id="quickCleanings">0</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function loadDashboard() {
+        try {
+            const stats = await apiCall('/dashboard');
+
+            document.getElementById('statRevenue').textContent = formatCurrency(stats.revenue_this_month);
+            document.getElementById('statRevenueChange').textContent = 'Ce mois';
+            document.getElementById('statBookings').textContent = stats.active_bookings;
+            document.getElementById('statBookingsDetail').textContent =
+                `${stats.upcoming_check_ins} arrivee(s) / ${stats.upcoming_check_outs} depart(s)`;
+            document.getElementById('statMessages').textContent = stats.messages_sent_today;
+            document.getElementById('statListings').textContent = stats.total_listings;
+            document.getElementById('statListingsDetail').textContent = 'Total des proprietes';
+
+            document.getElementById('quickCheckins').textContent = stats.upcoming_check_ins;
+            document.getElementById('quickCheckouts').textContent = stats.upcoming_check_outs;
+            document.getElementById('quickReviews').textContent = stats.pending_reviews;
+            document.getElementById('quickCleanings').textContent = stats.pending_cleanings;
+        } catch (e) {
+            console.error('Dashboard load error:', e);
+        }
+
+        // Load recent bookings
+        try {
+            const bookings = await apiCall('/bookings/');
+            const container = document.getElementById('recentBookings');
+            const recent = bookings.slice(0, 5);
+
+            if (recent.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">Aucune reservation</div>
+                        <div class="empty-state-sub">Les reservations apparaitront ici</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Arrivee</th>
+                                <th>Depart</th>
+                                <th>Statut</th>
+                                <th>Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${recent.map(b => `
+                                <tr>
+                                    <td style="font-weight:600">${b.guest_name}</td>
+                                    <td>${formatDate(b.check_in)}</td>
+                                    <td>${formatDate(b.check_out)}</td>
+                                    <td><span class="badge ${statusBadge(b.status)}">${b.status}</span></td>
+                                    <td>${formatCurrency(b.total_price)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        } catch (e) {
+            document.getElementById('recentBookings').innerHTML =
+                '<div class="empty-state"><div class="empty-state-text">Impossible de charger les reservations</div></div>';
+        }
+    }
+
+    function statusBadge(status) {
+        const map = {
+            CONFIRMED: 'badge-success',
+            PENDING: 'badge-warning',
+            CANCELLED: 'badge-danger',
+            COMPLETED: 'badge-info'
+        };
+        return map[status] || 'badge-muted';
+    }
+
+    loadDashboard();
+</script>
+{% endblock %}

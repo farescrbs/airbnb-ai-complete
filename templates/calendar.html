@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}Calendrier{% endblock %}
+{% block page_title %}Calendrier{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-secondary" onclick="syncAll()">🔄 Synchroniser tout</button>
+<button class="btn btn-primary" onclick="openCreateFeed()">+ Nouveau flux iCal</button>
+{% endblock %}
+
+{% block extra_css %}
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        margin-top: 16px;
+    }
+
+    .calendar-day-header {
+        text-align: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        padding: 8px 4px;
+    }
+
+    .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 13px;
+        background: var(--darker);
+        position: relative;
+        cursor: default;
+    }
+
+    .calendar-day.today {
+        border: 2px solid var(--primary);
+        font-weight: 700;
+    }
+
+    .calendar-day.booked {
+        background: rgba(99, 102, 241, 0.2);
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .calendar-day.empty {
+        background: transparent;
+    }
+
+    .calendar-nav {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .calendar-nav button {
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--text);
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .calendar-month {
+        font-size: 18px;
+        font-weight: 700;
+        min-width: 200px;
+        text-align: center;
+    }
+{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <!-- Calendar View -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Disponibilites</span>
+            <div class="calendar-nav">
+                <button onclick="changeMonth(-1)">←</button>
+                <span class="calendar-month" id="calendarMonth">-</span>
+                <button onclick="changeMonth(1)">→</button>
+            </div>
+        </div>
+        <div>
+            <select class="form-select" id="calendarListing" style="width:auto;margin-bottom:16px" onchange="loadCalendar()"></select>
+        </div>
+        <div class="calendar-grid" id="calendarGrid">
+            <div class="loading" style="grid-column:1/-1"><div class="spinner"></div> Chargement...</div>
+        </div>
+    </div>
+
+    <!-- Feeds -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Flux iCal</span>
+            <span class="card-action" id="feedCount">-</span>
+        </div>
+        <div id="feedsContainer">
+            <div class="loading"><div class="spinner"></div> Chargement...</div>
+        </div>
+
+        <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+            <div class="card-title" style="margin-bottom:12px;">Export iCal</div>
+            <div style="display:flex; gap:8px; align-items:flex-end;">
+                <div class="form-group" style="margin:0; flex:1;">
+                    <label class="form-label">Propriete</label>
+                    <select class="form-select" id="exportListing"></select>
+                </div>
+                <button class="btn btn-secondary" onclick="exportCalendar()">Exporter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feed Modal -->
+<div class="modal-overlay" id="feedModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Nouveau flux iCal</span>
+            <button class="modal-close" onclick="closeModal('feedModal')">&times;</button>
+        </div>
+        <form onsubmit="saveFeed(event)">
+            <div class="form-group">
+                <label class="form-label">Propriete</label>
+                <select class="form-select" id="feedListing" required></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Plateforme</label>
+                <select class="form-select" id="feedPlatform">
+                    <option value="AIRBNB">Airbnb</option>
+                    <option value="VRBO">VRBO</option>
+                    <option value="BOOKINGCOM">Booking.com</option>
+                    <option value="DIRECT">Direct</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">URL iCal</label>
+                <input class="form-input" id="feedUrl" required placeholder="https://www.airbnb.com/calendar/ical/...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Intervalle de sync (minutes)</label>
+                <input class="form-input" id="feedInterval" type="number" value="60">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('feedModal')">Annuler</button>
+                <button type="submit" class="btn btn-primary">Ajouter</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentYear, currentMonth;
+
+    function initCalendar() {
+        const now = new Date();
+        currentYear = now.getFullYear();
+        currentMonth = now.getMonth();
+    }
+
+    function changeMonth(delta) {
+        currentMonth += delta;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+        loadCalendar();
+    }
+
+    async function loadCalendar() {
+        const monthNames = ['Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin',
+            'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Decembre'];
+        document.getElementById('calendarMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+        const grid = document.getElementById('calendarGrid');
+        const dayHeaders = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+        // Get bookings for this listing
+        const listingId = document.getElementById('calendarListing').value;
+        let bookedDates = new Set();
+
+        if (listingId) {
+            try {
+                const bookings = await apiCall(`/bookings/?listing_id=${listingId}`);
+                bookings.forEach(b => {
+                    if (b.status === 'CANCELLED') return;
+                    let d = new Date(b.check_in);
+                    const end = new Date(b.check_out);
+                    while (d <= end) {
+                        bookedDates.add(d.toISOString().split('T')[0]);
+                        d.setDate(d.getDate() + 1);
+                    }
+                });
+            } catch (e) {}
+        }
+
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        let startDow = firstDay.getDay();
+        startDow = startDow === 0 ? 6 : startDow - 1; // Monday first
+
+        const today = new Date().toISOString().split('T')[0];
+
+        let html = dayHeaders.map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+
+        for (let i = 0; i < startDow; i++) {
+            html += '<div class="calendar-day empty"></div>';
+        }
+
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const isToday = dateStr === today;
+            const isBooked = bookedDates.has(dateStr);
+            html += `<div class="calendar-day${isToday ? ' today' : ''}${isBooked ? ' booked' : ''}">${day}</div>`;
+        }
+
+        grid.innerHTML = html;
+    }
+
+    async function loadFeeds() {
+        try {
+            const feeds = await apiCall('/calendar/feeds');
+            const container = document.getElementById('feedsContainer');
+            document.getElementById('feedCount').textContent = `${feeds.length} flux`;
+
+            if (feeds.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📅</div>
+                        <div class="empty-state-text">Aucun flux iCal</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = feeds.map(f => `
+                <div style="padding:14px; background:var(--darker); border-radius:8px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span class="badge badge-info">${f.platform}</span>
+                        <span style="font-size:11px; color:var(--text-muted)">
+                            ${f.last_synced ? 'Sync: ' + formatDateTime(f.last_synced) : 'Jamais synchronise'}
+                        </span>
+                    </div>
+                    <div style="font-size:12px; color:var(--text-muted); word-break:break-all; margin-bottom:10px;">
+                        Propriete #${f.listing_id} | Intervalle: ${f.sync_interval_minutes}min
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="syncFeed(${f.id})">Sync</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteFeed(${f.id})">Supprimer</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {}
+    }
+
+    async function loadListingSelects() {
+        try {
+            const listings = await apiCall('/listings/');
+            const opts = listings.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+            document.getElementById('calendarListing').innerHTML = opts;
+            document.getElementById('feedListing').innerHTML = opts;
+            document.getElementById('exportListing').innerHTML = opts;
+        } catch (e) {}
+    }
+
+    function openCreateFeed() {
+        openModal('feedModal');
+    }
+
+    async function saveFeed(e) {
+        e.preventDefault();
+        try {
+            await apiCall('/calendar/feeds', {
+                method: 'POST',
+                body: JSON.stringify({
+                    listing_id: parseInt(document.getElementById('feedListing').value),
+                    platform: document.getElementById('feedPlatform').value,
+                    ical_url: document.getElementById('feedUrl').value,
+                    sync_interval_minutes: parseInt(document.getElementById('feedInterval').value),
+                    is_active: true,
+                })
+            });
+            showToast('Flux ajoute', 'success');
+            closeModal('feedModal');
+            loadFeeds();
+        } catch (e) {}
+    }
+
+    async function syncFeed(id) {
+        try {
+            const result = await apiCall(`/calendar/feeds/${id}/sync`, { method: 'POST' });
+            showToast(`${result.synced_count} evenement(s) synchronise(s)`, 'success');
+            loadFeeds();
+            loadCalendar();
+        } catch (e) {}
+    }
+
+    async function syncAll() {
+        try {
+            const result = await apiCall('/calendar/sync-all', { method: 'POST' });
+            showToast(`${result.synced_feeds} flux synchronise(s)`, 'success');
+            loadFeeds();
+            loadCalendar();
+        } catch (e) {}
+    }
+
+    async function deleteFeed(id) {
+        if (!confirm('Supprimer ce flux ?')) return;
+        try {
+            await apiCall(`/calendar/feeds/${id}`, { method: 'DELETE' });
+            showToast('Flux supprime', 'success');
+            loadFeeds();
+        } catch (e) {}
+    }
+
+    function exportCalendar() {
+        const id = document.getElementById('exportListing').value;
+        if (id) window.open(`/calendar/export/${id}`, '_blank');
+    }
+
+    initCalendar();
+    loadListingSelects().then(() => loadCalendar());
+    loadFeeds();
+</script>
+{% endblock %}

@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+
+{% block title %}Operations{% endblock %}
+{% block page_title %}Operations{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-secondary" onclick="postPendingReviews()">⭐ Publier les avis</button>
+<button class="btn btn-primary" onclick="openCreateCleaning()">+ Planifier un menage</button>
+{% endblock %}
+
+{% block extra_css %}
+    .tab-bar {
+        display: flex;
+        gap: 4px;
+        background: var(--darker);
+        padding: 4px;
+        border-radius: 10px;
+        margin-bottom: 24px;
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+        background: var(--card);
+        color: var(--text);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+{% endblock %}
+
+{% block content %}
+<!-- Tabs -->
+<div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('reviews')">⭐ Avis</button>
+    <button class="tab-btn" onclick="switchTab('cleaning')">🧹 Menages</button>
+    <button class="tab-btn" onclick="switchTab('smartlock')">🔐 Smart Locks</button>
+</div>
+
+<!-- Reviews Tab -->
+<div class="tab-content active" id="tab-reviews">
+    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">En attente</span>
+                <div class="stat-icon orange">⏳</div>
+            </div>
+            <div class="stat-value" id="pendingReviewCount">--</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Publies</span>
+                <div class="stat-icon green">✅</div>
+            </div>
+            <div class="stat-value" id="postedReviewCount">--</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Ignores</span>
+                <div class="stat-icon pink">⏭</div>
+            </div>
+            <div class="stat-value" id="skippedReviewCount">--</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Avis des clients</span>
+            <select class="form-select" id="reviewStatusFilter" style="width:auto;padding:6px 10px;font-size:12px" onchange="loadReviews()">
+                <option value="">Tous</option>
+                <option value="PENDING">En attente</option>
+                <option value="POSTED">Publies</option>
+                <option value="SKIPPED">Ignores</option>
+            </select>
+        </div>
+        <div id="reviewsContainer">
+            <div class="loading"><div class="spinner"></div> Chargement...</div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+        <div class="card-header">
+            <span class="card-title">Generer un avis automatique</span>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+            <div class="form-group" style="margin:0; flex:1; min-width:200px;">
+                <label class="form-label">Reservation</label>
+                <select class="form-select" id="generateBookingId"></select>
+            </div>
+            <button class="btn btn-primary" onclick="generateReview()">Generer avec l'IA</button>
+        </div>
+    </div>
+</div>
+
+<!-- Cleaning Tab -->
+<div class="tab-content" id="tab-cleaning">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Taches de menage</span>
+            <select class="form-select" id="cleaningStatusFilter" style="width:auto;padding:6px 10px;font-size:12px" onchange="loadCleaning()">
+                <option value="">Tous</option>
+                <option value="SCHEDULED">Planifie</option>
+                <option value="IN_PROGRESS">En cours</option>
+                <option value="COMPLETED">Termine</option>
+                <option value="CANCELLED">Annule</option>
+            </select>
+        </div>
+        <div id="cleaningContainer">
+            <div class="loading"><div class="spinner"></div> Chargement...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Smart Lock Tab -->
+<div class="tab-content" id="tab-smartlock">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Codes d'acces Smart Lock</span>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:24px;">
+            <div class="form-group" style="margin:0; flex:1; min-width:200px;">
+                <label class="form-label">Reservation</label>
+                <select class="form-select" id="lockBookingId"></select>
+            </div>
+            <button class="btn btn-primary" onclick="provisionLock()">Generer le code</button>
+        </div>
+        <div id="lockResult" style="display:none; padding:20px; background:var(--darker); border-radius:8px; text-align:center;">
+            <div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Code d'acces genere</div>
+            <div style="font-size:32px; font-weight:800; font-family:monospace; color:var(--primary); letter-spacing:4px;" id="lockCode">-</div>
+        </div>
+    </div>
+</div>
+
+<!-- Cleaning Modal -->
+<div class="modal-overlay" id="cleaningModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Planifier un menage</span>
+            <button class="modal-close" onclick="closeModal('cleaningModal')">&times;</button>
+        </div>
+        <form onsubmit="saveCleaning(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Propriete</label>
+                    <select class="form-select" id="cleaningListing" required></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reservation (optionnel)</label>
+                    <select class="form-select" id="cleaningBooking">
+                        <option value="">Aucune</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input class="form-input" id="cleaningDate" type="date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Heure</label>
+                    <input class="form-input" id="cleaningTime" type="time" value="11:00" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nom du prestataire</label>
+                    <input class="form-input" id="cleaningCleanerName" placeholder="Marie Menage">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contact</label>
+                    <input class="form-input" id="cleaningCleanerContact" placeholder="+33 6 00 00 00 00">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea class="form-textarea" id="cleaningNotes" placeholder="Instructions speciales..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('cleaningModal')">Annuler</button>
+                <button type="submit" class="btn btn-primary">Planifier</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // ── Reviews ──
+    async function loadReviews() {
+        try {
+            const status = document.getElementById('reviewStatusFilter').value;
+            const query = status ? `?status=${status}` : '';
+            const reviews = await apiCall('/operations/reviews' + query);
+            const container = document.getElementById('reviewsContainer');
+
+            // Stats
+            const all = await apiCall('/operations/reviews');
+            document.getElementById('pendingReviewCount').textContent = all.filter(r => r.status === 'PENDING').length;
+            document.getElementById('postedReviewCount').textContent = all.filter(r => r.status === 'POSTED').length;
+            document.getElementById('skippedReviewCount').textContent = all.filter(r => r.status === 'SKIPPED').length;
+
+            if (reviews.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⭐</div>
+                        <div class="empty-state-text">Aucun avis</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Reservation</th>
+                                <th>Note</th>
+                                <th>Avis</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${reviews.map(r => `
+                                <tr>
+                                    <td>#${r.booking_id}</td>
+                                    <td>${r.rating ? '⭐'.repeat(r.rating) : '-'}</td>
+                                    <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted);">
+                                        ${r.public_review || '-'}
+                                    </td>
+                                    <td><span class="badge ${reviewBadge(r.status)}">${reviewLabel(r.status)}</span></td>
+                                    <td>${r.posted_at ? formatDateTime(r.posted_at) : formatDateTime(r.created_at)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        } catch (e) {}
+    }
+
+    async function generateReview() {
+        const bookingId = document.getElementById('generateBookingId').value;
+        if (!bookingId) return;
+        try {
+            await apiCall('/operations/reviews/generate', {
+                method: 'POST',
+                body: JSON.stringify({ booking_id: parseInt(bookingId) })
+            });
+            showToast('Avis genere', 'success');
+            loadReviews();
+        } catch (e) {}
+    }
+
+    async function postPendingReviews() {
+        try {
+            const result = await apiCall('/operations/reviews/post-pending', { method: 'POST' });
+            showToast(`${result.reviews_posted} avis publie(s)`, 'success');
+            loadReviews();
+        } catch (e) {}
+    }
+
+    function reviewBadge(s) {
+        return { PENDING: 'badge-warning', POSTED: 'badge-success', SKIPPED: 'badge-muted' }[s] || 'badge-muted';
+    }
+
+    function reviewLabel(s) {
+        return { PENDING: 'En attente', POSTED: 'Publie', SKIPPED: 'Ignore' }[s] || s;
+    }
+
+    // ── Cleaning ──
+    async function loadCleaning() {
+        try {
+            const status = document.getElementById('cleaningStatusFilter').value;
+            const query = status ? `?status=${status}` : '';
+            const tasks = await apiCall('/operations/cleaning' + query);
+            const container = document.getElementById('cleaningContainer');
+
+            if (tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🧹</div>
+                        <div class="empty-state-text">Aucune tache de menage</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Propriete</th>
+                                <th>Reservation</th>
+                                <th>Date</th>
+                                <th>Heure</th>
+                                <th>Prestataire</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tasks.map(t => `
+                                <tr>
+                                    <td>#${t.listing_id}</td>
+                                    <td>${t.booking_id ? '#' + t.booking_id : '-'}</td>
+                                    <td>${formatDate(t.scheduled_date)}</td>
+                                    <td>${t.scheduled_time || '-'}</td>
+                                    <td>${t.cleaner_name || '-'}</td>
+                                    <td><span class="badge ${cleaningBadge(t.status)}">${cleaningLabel(t.status)}</span></td>
+                                    <td>
+                                        ${t.status === 'SCHEDULED' ? `
+                                            <button class="btn btn-success btn-sm" onclick="updateCleaning(${t.id}, 'IN_PROGRESS')">Demarrer</button>
+                                        ` : ''}
+                                        ${t.status === 'IN_PROGRESS' ? `
+                                            <button class="btn btn-success btn-sm" onclick="updateCleaning(${t.id}, 'COMPLETED')">Terminer</button>
+                                        ` : ''}
+                                        ${t.status !== 'COMPLETED' && t.status !== 'CANCELLED' ? `
+                                            <button class="btn btn-danger btn-sm" onclick="updateCleaning(${t.id}, 'CANCELLED')">Annuler</button>
+                                        ` : ''}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        } catch (e) {}
+    }
+
+    function openCreateCleaning() {
+        openModal('cleaningModal');
+    }
+
+    async function saveCleaning(e) {
+        e.preventDefault();
+        try {
+            await apiCall('/operations/cleaning', {
+                method: 'POST',
+                body: JSON.stringify({
+                    listing_id: parseInt(document.getElementById('cleaningListing').value),
+                    booking_id: parseInt(document.getElementById('cleaningBooking').value) || null,
+                    scheduled_date: document.getElementById('cleaningDate').value,
+                    scheduled_time: document.getElementById('cleaningTime').value,
+                    cleaner_name: document.getElementById('cleaningCleanerName').value || null,
+                    cleaner_contact: document.getElementById('cleaningCleanerContact').value || null,
+                    notes: document.getElementById('cleaningNotes').value || null,
+                    status: 'SCHEDULED',
+                })
+            });
+            showToast('Menage planifie', 'success');
+            closeModal('cleaningModal');
+            loadCleaning();
+        } catch (e) {}
+    }
+
+    async function updateCleaning(id, status) {
+        try {
+            await apiCall(`/operations/cleaning/${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ status })
+            });
+            showToast('Statut mis a jour', 'success');
+            loadCleaning();
+        } catch (e) {}
+    }
+
+    function cleaningBadge(s) {
+        return { SCHEDULED: 'badge-info', IN_PROGRESS: 'badge-warning', COMPLETED: 'badge-success', CANCELLED: 'badge-danger' }[s] || 'badge-muted';
+    }
+
+    function cleaningLabel(s) {
+        return { SCHEDULED: 'Planifie', IN_PROGRESS: 'En cours', COMPLETED: 'Termine', CANCELLED: 'Annule' }[s] || s;
+    }
+
+    // ── Smart Lock ──
+    async function provisionLock() {
+        const bookingId = document.getElementById('lockBookingId').value;
+        if (!bookingId) return;
+        try {
+            const result = await apiCall(`/operations/smart-lock/${bookingId}/provision`, { method: 'POST' });
+            document.getElementById('lockResult').style.display = 'block';
+            document.getElementById('lockCode').textContent = result.access_code;
+            showToast('Code genere', 'success');
+        } catch (e) {}
+    }
+
+    // ── Init ──
+    async function loadSelects() {
+        try {
+            const [listings, bookings] = await Promise.all([
+                apiCall('/listings/'),
+                apiCall('/bookings/')
+            ]);
+            const listingOpts = listings.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+            const bookingOpts = bookings.map(b => `<option value="${b.id}">#${b.id} - ${b.guest_name}</option>`).join('');
+
+            document.getElementById('cleaningListing').innerHTML = listingOpts;
+            document.getElementById('generateBookingId').innerHTML = bookingOpts;
+            document.getElementById('lockBookingId').innerHTML = bookingOpts;
+
+            // Also populate cleaning booking select
+            document.getElementById('cleaningBooking').innerHTML =
+                '<option value="">Aucune</option>' + bookingOpts;
+        } catch (e) {}
+    }
+
+    loadSelects();
+    loadReviews();
+    loadCleaning();
+</script>
+{% endblock %}

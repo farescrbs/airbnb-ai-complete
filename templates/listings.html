@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Proprietes{% endblock %}
+{% block page_title %}Proprietes{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-primary" onclick="openModal('listingModal')">+ Nouvelle propriete</button>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Toutes les proprietes</span>
+        <span class="card-action" id="listingCount">-</span>
+    </div>
+    <div id="listingsContainer">
+        <div class="loading"><div class="spinner"></div> Chargement...</div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="listingModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="listingModalTitle">Nouvelle propriete</span>
+            <button class="modal-close" onclick="closeModal('listingModal')">&times;</button>
+        </div>
+        <form id="listingForm" onsubmit="saveListing(event)">
+            <input type="hidden" id="listingId">
+            <div class="form-group">
+                <label class="form-label">Nom</label>
+                <input class="form-input" id="listingName" required placeholder="Appartement Paris 11e">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">ID externe</label>
+                    <input class="form-input" id="listingExternalId" required placeholder="ABB-12345">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Plateforme</label>
+                    <select class="form-select" id="listingPlatform">
+                        <option value="AIRBNB">Airbnb</option>
+                        <option value="VRBO">VRBO</option>
+                        <option value="BOOKINGCOM">Booking.com</option>
+                        <option value="DIRECT">Direct</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Adresse</label>
+                <input class="form-input" id="listingAddress" placeholder="123 Rue de la Paix, Paris">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Prix de base / nuit</label>
+                    <input class="form-input" id="listingPrice" type="number" step="0.01" required placeholder="120.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Smart Lock ID</label>
+                    <input class="form-input" id="listingSmartLock" placeholder="LOCK-001">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Prix minimum</label>
+                    <input class="form-input" id="listingMinPrice" type="number" step="0.01" placeholder="80.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Prix maximum</label>
+                    <input class="form-input" id="listingMaxPrice" type="number" step="0.01" placeholder="200.00">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">URL iCal</label>
+                <input class="form-input" id="listingIcal" placeholder="https://www.airbnb.com/calendar/ical/...">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('listingModal')">Annuler</button>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let editingListingId = null;
+
+    async function loadListings() {
+        try {
+            const listings = await apiCall('/listings/');
+            const container = document.getElementById('listingsContainer');
+            document.getElementById('listingCount').textContent = `${listings.length} propriete(s)`;
+
+            if (listings.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏡</div>
+                        <div class="empty-state-text">Aucune propriete</div>
+                        <div class="empty-state-sub">Ajoutez votre premiere propriete pour commencer</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Plateforme</th>
+                                <th>Adresse</th>
+                                <th>Prix / nuit</th>
+                                <th>Smart Lock</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${listings.map(l => `
+                                <tr>
+                                    <td style="font-weight:600">${l.name}</td>
+                                    <td><span class="badge badge-info">${l.platform}</span></td>
+                                    <td style="color: var(--text-muted)">${l.address || '-'}</td>
+                                    <td>${formatCurrency(l.base_price)}</td>
+                                    <td>${l.smart_lock_id || '-'}</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-sm" onclick="editListing(${l.id})">Modifier</button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteListing(${l.id})">Supprimer</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        } catch (e) {
+            console.error('Load listings error:', e);
+        }
+    }
+
+    async function saveListing(e) {
+        e.preventDefault();
+        const data = {
+            name: document.getElementById('listingName').value,
+            external_id: document.getElementById('listingExternalId').value,
+            platform: document.getElementById('listingPlatform').value,
+            address: document.getElementById('listingAddress').value,
+            base_price: parseFloat(document.getElementById('listingPrice').value),
+            smart_lock_id: document.getElementById('listingSmartLock').value || null,
+            min_price: parseFloat(document.getElementById('listingMinPrice').value) || null,
+            max_price: parseFloat(document.getElementById('listingMaxPrice').value) || null,
+            ical_url: document.getElementById('listingIcal').value || null,
+        };
+
+        try {
+            if (editingListingId) {
+                await apiCall(`/listings/${editingListingId}`, { method: 'PUT', body: JSON.stringify(data) });
+                showToast('Propriete mise a jour', 'success');
+            } else {
+                await apiCall('/listings/', { method: 'POST', body: JSON.stringify(data) });
+                showToast('Propriete creee', 'success');
+            }
+            closeModal('listingModal');
+            resetListingForm();
+            loadListings();
+        } catch (e) {}
+    }
+
+    async function editListing(id) {
+        try {
+            const l = await apiCall(`/listings/${id}`);
+            editingListingId = id;
+            document.getElementById('listingModalTitle').textContent = 'Modifier la propriete';
+            document.getElementById('listingName').value = l.name;
+            document.getElementById('listingExternalId').value = l.external_id;
+            document.getElementById('listingPlatform').value = l.platform;
+            document.getElementById('listingAddress').value = l.address || '';
+            document.getElementById('listingPrice').value = l.base_price;
+            document.getElementById('listingSmartLock').value = l.smart_lock_id || '';
+            document.getElementById('listingMinPrice').value = l.min_price || '';
+            document.getElementById('listingMaxPrice').value = l.max_price || '';
+            document.getElementById('listingIcal').value = l.ical_url || '';
+            openModal('listingModal');
+        } catch (e) {}
+    }
+
+    async function deleteListing(id) {
+        if (!confirm('Supprimer cette propriete ?')) return;
+        try {
+            await apiCall(`/listings/${id}`, { method: 'DELETE' });
+            showToast('Propriete supprimee', 'success');
+            loadListings();
+        } catch (e) {}
+    }
+
+    function resetListingForm() {
+        editingListingId = null;
+        document.getElementById('listingModalTitle').textContent = 'Nouvelle propriete';
+        document.getElementById('listingForm').reset();
+    }
+
+    // Reset form when opening for create
+    document.querySelector('[onclick="openModal(\'listingModal\')"]')
+        ?.addEventListener('click', resetListingForm);
+
+    loadListings();
+</script>
+{% endblock %}
